@@ -1,27 +1,34 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
+import express, { Request, Response } from 'express'
+import cors from 'cors'
 
-dotenv.config();
+const app = express()
+const PORT = process.env.PORT || 3000
 
-const app = express();
-const port = process.env.PORT || 3000;
+app.use(cors())
+app.use(express.json())
 
-app.use(cors());
-app.use(express.json());
+// Mock IT Service Categories for Issue #3
+const categories = [
+  { id: 1, name: 'Hardware & Devices' },
+  { id: 2, name: 'Software & Applications' },
+  { id: 3, name: 'Network & Connectivity' },
+  { id: 4, name: 'Account & Access' },
+]
 
-// Health Check Endpoint
-app.get('/api/health', (req, res) => {
-  res.status(200).json({
-    status: 'ok',
-    service: 'TokTickIT API'
-  });
-});
+// GET /api/health (Issue #2)
+app.get('/api/health', (req: Request, res: Response) => {
+  res.status(200).json({ status: 'ok', service: 'TokTickIT API' })
+})
+
+// GET /api/categories (Issue #3)
+app.get('/api/categories', (req: Request, res: Response) => {
+  res.status(200).json({ categories })
+})
 
 if (process.env.NODE_ENV !== 'test') {
-  app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
-  });
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`)
+  })
 }
 
-export default app;
+export default app

@@ -23,8 +23,21 @@ app.get('/api/categories', async (req: Request, res: Response) => {
     })
     res.status(200).json(categories)
   } catch (error) {
-    console.error('Prisma Error Details:', error)
+    console.error('Prisma Error Details (Categories):', error)
     res.status(500).json({ error: 'Failed to fetch categories' })
+  }
+})
+
+// GET /api/requesters - ดึงรายชื่อ Requester ทั้งหมดสำหรับ Persona Switcher
+app.get('/api/requesters', async (_req: Request, res: Response) => {
+  try {
+    const requesters = await prisma.requesterUser.findMany({
+      orderBy: { id: 'asc' },
+    })
+    res.status(200).json(requesters)
+  } catch (error) {
+    console.error('Prisma Error Details (Requesters):', error)
+    res.status(500).json({ error: 'Failed to fetch requesters' })
   }
 })
 

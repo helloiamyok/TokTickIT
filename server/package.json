@@ -16,10 +16,10 @@
     "vitest": "^4.1.10"
   },
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "preview": "vite preview",
+    "dev": "tsx watch src/index.ts",
+    "serve": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "build": "tsc",
     "test": "vitest run"
   },
   "prisma": {

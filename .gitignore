@@ -1,6 +1,41 @@
-node_modules/  
-*/node_modules/  
-dist/  
-.vite/  
-*.tmp*  
-.env 
+# Dependencies
+node_modules/
+*/node_modules/
+**/node_modules/
+
+# Production & Build outputs
+dist/
+*/dist/
+**/dist/
+build/
+*/build/
+**/build/
+
+# Cache & Temporary files
+.vite/
+*/.vite/
+**/.vite/
+*.tsbuildinfo
+**/*.tsbuildinfo
+*.tmp*
+.cache/
+**/.cache/
+
+# Environment files & Secrets
+.env
+.env.*
+!.env.example
+*.env
+*/*.env
+**/.env
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS generated files
+.DS_Store
+Thumbs.db

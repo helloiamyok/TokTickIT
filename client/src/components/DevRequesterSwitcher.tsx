@@ -5,54 +5,20 @@ export const DevRequesterSwitcher: React.FC = () => {
   const { currentRequester, requesters, setCurrentRequester, isLoading } = useRequester();
 
   if (isLoading) {
-    return (
-      <span style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.7)' }}>
-        Loading personas...
-      </span>
-    );
+    return <span className="text-xs text-gray-400">Loading dev session...</span>;
   }
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.6rem',
-        backgroundColor: 'rgba(0, 0, 0, 0.25)',
-        border: '1px solid rgba(255, 255, 255, 0.3)',
-        padding: '0.35rem 0.75rem',
-        borderRadius: '8px',
-      }}
-    >
-      <span
-        style={{
-          fontWeight: 700,
-          color: '#ffffff',
-          fontSize: '0.75rem',
-          letterSpacing: '0.04em',
-          textTransform: 'uppercase',
-          whiteSpace: 'nowrap',
-        }}
-      >
+    <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-md text-sm">
+      <span className="font-semibold text-amber-900 text-xs uppercase tracking-wide">
         🛠️ Dev Requester:
       </span>
       <select
-        id="dev-requester-select"
+        className="bg-white border border-amber-300 text-gray-800 text-sm rounded px-2 py-1 outline-none focus:ring-1 focus:ring-amber-500 cursor-pointer"
         value={currentRequester?.id || ''}
         onChange={(e) => {
           const selected = requesters.find((r) => r.id === Number(e.target.value));
           if (selected) setCurrentRequester(selected);
-        }}
-        style={{
-          backgroundColor: '#ffffff',
-          color: '#111827',
-          border: '1px solid #D1D5DB',
-          fontSize: '0.85rem',
-          fontWeight: 600,
-          borderRadius: '6px',
-          padding: '0.3rem 0.6rem',
-          outline: 'none',
-          cursor: 'pointer',
         }}
       >
         {requesters.map((user) => (

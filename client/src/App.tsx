@@ -288,7 +288,7 @@ function TicketCreationForm() {
                 animation: 'fadeIn 0.3s ease-in-out',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', justify-content: 'space-between', marginBottom: '0.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                 <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <span>🎉</span> Ticket Created Successfully!
                 </h3>

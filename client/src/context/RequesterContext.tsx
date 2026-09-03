@@ -1,20 +1,41 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 
 export interface RequesterUser {
   id: number;
   name: string;
   email: string;
-  isActive: boolean;
+  isActive?: boolean;
 }
 
 interface RequesterContextType {
   currentRequester: RequesterUser | null;
   requesters: RequesterUser[];
-  setCurrentRequester: (user: RequesterUser) => void;
+  setCurrentRequester: (user: RequesterUser | null) => void;
   isLoading: boolean;
 }
 
 const RequesterContext = createContext<RequesterContextType | undefined>(undefined);
+
+const safeGetStorage = (key: string): string | null => {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage && typeof window.localStorage.getItem === 'function') {
+      return window.localStorage.getItem(key);
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+};
+
+const safeSetStorage = (key: string, value: string) => {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage && typeof window.localStorage.setItem === 'function') {
+      window.localStorage.setItem(key, value);
+    }
+  } catch {
+    // ignore
+  }
+};
 
 export const RequesterProvider = ({ children }: { children: ReactNode }) => {
   const [requesters, setRequesters] = useState<RequesterUser[]>([]);
@@ -22,24 +43,40 @@ export const RequesterProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/requesters') // หรือ /api/requesters ตาม config proxy
-      .then((res) => res.json())
-      .then((data: RequesterUser[]) => {
-        setRequesters(data);
-        const savedId = localStorage.getItem('toktickit_requester_id');
-        // เลือก user ที่เคยบันทึกไว้ หรือ default เป็น Active user คนแรก
-        const initialUser = data.find((u) => (savedId ? u.id === Number(savedId) : u.isActive));
-        if (initialUser) {
-          setCurrentRequesterState(initialUser);
+    fetch('http://localhost:3000/api/requesters')
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+        return res.json();
+      })
+      .then((data: any) => {
+        if (Array.isArray(data)) {
+          setRequesters(data);
+          const savedId = safeGetStorage('toktickit_requester_id');
+          if (savedId === 'none') {
+            setCurrentRequesterState(null);
+          } else {
+            const initialUser = data.find((u) => (savedId ? u.id === Number(savedId) : u.isActive !== false));
+            if (initialUser) {
+              setCurrentRequesterState(initialUser);
+            } else if (data.length > 0) {
+              setCurrentRequesterState(data[0]);
+            }
+          }
         }
       })
-      .catch((err) => console.error('Error loading requesters:', err))
+      .catch((err) => {
+        console.error('Error loading requesters:', err);
+      })
       .finally(() => setIsLoading(false));
   }, []);
 
-  const setCurrentRequester = (user: RequesterUser) => {
+  const setCurrentRequester = (user: RequesterUser | null) => {
     setCurrentRequesterState(user);
-    localStorage.setItem('toktickit_requester_id', user.id.toString());
+    if (user) {
+      safeSetStorage('toktickit_requester_id', user.id.toString());
+    } else {
+      safeSetStorage('toktickit_requester_id', 'none');
+    }
   };
 
   return (

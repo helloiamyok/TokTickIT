@@ -3,6 +3,7 @@ import { RequesterProvider, useRequester } from './context/RequesterContext'
 import { DevRequesterSwitcher } from './components/DevRequesterSwitcher'
 import { CreateTicket } from './components/CreateTicket'
 import { MyTickets } from './components/MyTickets'
+import { TicketDetail } from './components/TicketDetail'
 
 interface Category {
   id: number
@@ -10,7 +11,8 @@ interface Category {
 }
 
 function MainContent() {
-  const [activeTab, setActiveTab] = useState<'list' | 'create' | 'system'>('list')
+  const [activeTab, setActiveTab] = useState<'list' | 'create' | 'system' | 'detail'>('list')
+  const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null)
   const [status, setStatus] = useState<string>('Unknown')
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState<boolean>(false)
@@ -18,6 +20,12 @@ function MainContent() {
 
   // ดึง active persona มาแสดงผลในหน้านี้
   const { currentRequester } = useRequester()
+
+  // ฟังก์ชันเปิดหน้ารายละเอียดตั๋ว (Issue 6)
+  const handleSelectTicket = (ticketId: number) => {
+    setSelectedTicketId(ticketId)
+    setActiveTab('detail')
+  }
 
   const handleCheckSystem = async () => {
     setLoading(true)
@@ -67,12 +75,12 @@ function MainContent() {
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0066ff' }}>TokTickIT</span>
+            <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#006B3C' }}>TokTickIT</span>
             <span
               style={{
                 fontSize: '0.75rem',
-                backgroundColor: '#e0f2fe',
-                color: '#0369a1',
+                backgroundColor: '#EAF6EF',
+                color: '#006B3C',
                 fontWeight: 600,
                 padding: '0.2rem 0.5rem',
                 borderRadius: '0.25rem',
@@ -93,8 +101,8 @@ function MainContent() {
                 fontWeight: 600,
                 border: 'none',
                 cursor: 'pointer',
-                backgroundColor: activeTab === 'list' ? '#006B3C' : '#F1F5F9',
-                color: activeTab === 'list' ? '#FFFFFF' : '#475569',
+                backgroundColor: activeTab === 'list' || activeTab === 'detail' ? '#006B3C' : '#F1F5F9',
+                color: activeTab === 'list' || activeTab === 'detail' ? '#FFFFFF' : '#475569',
                 transition: 'all 0.15s ease',
               }}
             >
@@ -142,6 +150,7 @@ function MainContent() {
       {activeTab === 'list' ? (
         <MyTickets
           currentRequester={currentRequester}
+          onSelectTicket={handleSelectTicket}
           onCreateNew={() => setActiveTab('create')}
         />
       ) : activeTab === 'create' ? (
@@ -149,6 +158,12 @@ function MainContent() {
           currentRequester={currentRequester}
           onCancel={() => setActiveTab('list')}
           onSuccess={() => setActiveTab('list')}
+        />
+      ) : activeTab === 'detail' && selectedTicketId ? (
+        <TicketDetail
+          ticketId={selectedTicketId}
+          currentRequester={currentRequester}
+          onBack={() => setActiveTab('list')}
         />
       ) : (
         <div

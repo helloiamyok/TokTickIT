@@ -5,8 +5,11 @@ node_modules/
 
 # Production Builds & Caches
 dist/
+*/dist/
+**/dist/
 build/
-out/
+*/build/
+**/build/
 .vite/
 */.vite/
 **/.vite/
@@ -62,3 +65,8 @@ Thumbs.db
 *.temp
 node_modules/ 
 **/node_modules/ 
+
+node_modules/
+**/node_modules/
+dist/
+**/dist/

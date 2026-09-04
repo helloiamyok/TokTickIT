@@ -7,9 +7,11 @@ interface Category {
 
 interface Ticket {
   id: number;
-  ticketNumber: string;
+  ticketNumber?: string;
+  ticketNo?: string;
   summary: string;
-  status: string;
+  status?: string;
+  currentStatus?: string;
   requestedPriority: string;
   createdAt: string;
   category?: { name: string };
@@ -304,7 +306,9 @@ export const MyTickets: React.FC<MyTicketsProps> = ({
                 </thead>
                 <tbody>
                   {tickets.map((t) => {
-                    const statusBadge = getStatusBadgeStyle(t.status);
+                    const ticketNo = t.ticketNumber || t.ticketNo || `TKT-${t.id}`;
+                    const currentStatus = t.status || t.currentStatus || 'NEW';
+                    const statusBadge = getStatusBadgeStyle(currentStatus);
                     const priorityBadge = getPriorityBadgeStyle(t.requestedPriority);
                     return (
                       <tr
@@ -312,7 +316,7 @@ export const MyTickets: React.FC<MyTicketsProps> = ({
                         onClick={() => onSelectTicket && onSelectTicket(t.id)}
                         style={{ borderBottom: '1px solid #E5E7EB', cursor: onSelectTicket ? 'pointer' : 'default' }}
                       >
-                        <td style={{ padding: '0.85rem 1rem', fontWeight: 600, color: '#006B3C' }}>{t.ticketNumber}</td>
+                        <td style={{ padding: '0.85rem 1rem', fontWeight: 600, color: '#006B3C' }}>{ticketNo}</td>
                         <td style={{ padding: '0.85rem 1rem', color: '#1F2937', fontWeight: 500 }}>{t.summary}</td>
                         <td style={{ padding: '0.85rem 1rem', color: '#4B5563' }}>{t.category?.name || '-'}</td>
                         <td style={{ padding: '0.85rem 1rem' }}>
@@ -322,7 +326,7 @@ export const MyTickets: React.FC<MyTicketsProps> = ({
                         </td>
                         <td style={{ padding: '0.85rem 1rem' }}>
                           <span style={{ padding: '0.25rem 0.65rem', borderRadius: '12px', fontSize: '0.78rem', fontWeight: 600, backgroundColor: statusBadge.bg, color: statusBadge.text, border: `1px solid ${statusBadge.border}` }}>
-                            {t.status}
+                            {currentStatus}
                           </span>
                         </td>
                         <td style={{ padding: '0.85rem 1rem', color: '#6B7280', fontSize: '0.85rem' }}>

@@ -135,8 +135,42 @@ describe('TokTickIT UI Unit Tests', () => {
     })
 
     render(<App />)
+    // Click the Create Ticket tab in the navigation bar
+    const createTab = screen.getByRole('button', { name: /📝 Create Ticket/i })
+    fireEvent.click(createTab)
+
     expect(screen.getByRole('button', { name: /Submit Ticket/i })).toBeInTheDocument()
     expect(screen.getByPlaceholderText(/Brief summary of the issue.../i)).toBeInTheDocument()
     expect(screen.getByPlaceholderText(/Provide details about the issue.../i)).toBeInTheDocument()
+  })
+
+  it('UI-05: My Tickets view renders by default with Search, Filters, and Table controls', async () => {
+    global.fetch = vi.fn().mockImplementation((url: string) => {
+      if (url.includes('/tickets')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            data: [
+              {
+                id: 1,
+                ticketNumber: 'TKT-2026-000001',
+                summary: 'VPN Issue',
+                status: 'NEW',
+                requestedPriority: 'HIGH',
+                createdAt: new Date().toISOString(),
+                category: { name: 'Network' },
+              },
+            ],
+            pagination: { page: 1, limit: 5, totalItems: 1, totalPages: 1 },
+          }),
+        })
+      }
+      return Promise.resolve({ ok: true, json: async () => [] })
+    })
+
+    render(<App />)
+    expect(screen.getByRole('heading', { name: /My Tickets/i })).toBeInTheDocument()
+    expect(screen.getByPlaceholderText(/Ticket No or Summary.../i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Filter \/ Search/i })).toBeInTheDocument()
   })
 })

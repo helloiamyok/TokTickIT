@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { RequesterProvider, useRequester } from './context/RequesterContext'
 import { DevRequesterSwitcher } from './components/DevRequesterSwitcher'
 import { CreateTicket } from './components/CreateTicket'
+import { MyTickets } from './components/MyTickets'
 
 interface Category {
   id: number
@@ -9,7 +10,7 @@ interface Category {
 }
 
 function MainContent() {
-  const [activeTab, setActiveTab] = useState<'system' | 'create'>('create')
+  const [activeTab, setActiveTab] = useState<'list' | 'create' | 'system'>('list')
   const [status, setStatus] = useState<string>('Unknown')
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState<boolean>(false)
@@ -84,6 +85,22 @@ function MainContent() {
           {/* Tab Navigation */}
           <nav style={{ display: 'flex', gap: '0.5rem' }}>
             <button
+              onClick={() => setActiveTab('list')}
+              style={{
+                padding: '0.45rem 0.9rem',
+                borderRadius: '6px',
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                border: 'none',
+                cursor: 'pointer',
+                backgroundColor: activeTab === 'list' ? '#006B3C' : '#F1F5F9',
+                color: activeTab === 'list' ? '#FFFFFF' : '#475569',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              📋 My Tickets
+            </button>
+            <button
               onClick={() => setActiveTab('create')}
               style={{
                 padding: '0.45rem 0.9rem',
@@ -122,8 +139,17 @@ function MainContent() {
       </header>
 
       {/* Main View Area */}
-      {activeTab === 'create' ? (
-        <CreateTicket currentRequester={currentRequester} />
+      {activeTab === 'list' ? (
+        <MyTickets
+          currentRequester={currentRequester}
+          onCreateNew={() => setActiveTab('create')}
+        />
+      ) : activeTab === 'create' ? (
+        <CreateTicket
+          currentRequester={currentRequester}
+          onCancel={() => setActiveTab('list')}
+          onSuccess={() => setActiveTab('list')}
+        />
       ) : (
         <div
           style={{

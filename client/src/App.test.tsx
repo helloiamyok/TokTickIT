@@ -136,7 +136,7 @@ describe('TokTickIT UI Unit Tests', () => {
 
     render(<App />)
     // Click the Create Ticket tab in the navigation bar
-    const createTab = screen.getAllByRole('button', { name: /Create Ticket/i })[0]
+    const createTab = screen.getByRole('button', { name: /📝 Create Ticket/i })
     fireEvent.click(createTab)
 
     expect(screen.getByRole('button', { name: /Submit Ticket/i })).toBeInTheDocument()

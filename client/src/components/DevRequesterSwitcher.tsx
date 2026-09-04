@@ -9,33 +9,12 @@ export const DevRequesterSwitcher: React.FC = () => {
   }
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.5rem',
-        backgroundColor: 'rgba(255, 255, 255, 0.15)',
-        border: '1px solid rgba(255, 255, 255, 0.3)',
-        padding: '0.35rem 0.75rem',
-        borderRadius: '6px',
-        color: '#FFFFFF',
-      }}
-    >
-      <span style={{ fontWeight: 600, fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.04em', color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-        👤 Profile:
+    <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-md text-sm">
+      <span className="font-semibold text-amber-900 text-xs uppercase tracking-wide">
+        🛠️ Dev Requester:
       </span>
       <select
-        style={{
-          backgroundColor: '#FFFFFF',
-          border: '1px solid #D1D5DB',
-          color: '#1F2937',
-          fontSize: '0.85rem',
-          borderRadius: '4px',
-          padding: '0.25rem 0.5rem',
-          fontWeight: 500,
-          cursor: 'pointer',
-          outline: 'none',
-        }}
+        className="bg-white border border-amber-300 text-gray-800 text-sm rounded px-2 py-1 outline-none focus:ring-1 focus:ring-amber-500 cursor-pointer"
         value={currentRequester?.id || ''}
         onChange={(e) => {
           const selected = requesters.find((r) => r.id === Number(e.target.value));

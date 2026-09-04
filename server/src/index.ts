@@ -103,9 +103,9 @@ app.post('/api/tickets', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Description is required.' })
     }
 
-    const validPriorities = ['LOW', 'MEDIUM', 'HIGH']
+    const validPriorities = ['LOW', 'MEDIUM', 'HIGH', 'URGENT']
     if (!validPriorities.includes(requestedPriority)) {
-      return res.status(400).json({ error: 'Invalid requested priority. Must be LOW, MEDIUM, or HIGH.' })
+      return res.status(400).json({ error: 'Invalid requested priority. Must be LOW, MEDIUM, HIGH, or URGENT.' })
     }
 
     // ตรวจสอบว่า Requester มีอยู่จริงและ Active (BR-04)
@@ -140,8 +140,8 @@ app.post('/api/tickets', async (req: Request, res: Response) => {
           description: description.trim(),
           categoryId: Number(categoryId),
           relatedSystemId: Number(relatedSystemId),
-          requestedPriority: requestedPriority as Priority,
-          itPriority: requestedPriority as Priority,
+          requestedPriority: (requestedPriority === 'URGENT' ? 'HIGH' : requestedPriority) as Priority,
+          itPriority: (requestedPriority === 'URGENT' ? 'HIGH' : requestedPriority) as Priority,
           currentStatus: TicketStatus.NEW, // BR-02: สถานะเริ่มต้น NEW
           ticketNo: `PENDING-${Date.now()}`,
         },
@@ -163,6 +163,7 @@ app.post('/api/tickets', async (req: Request, res: Response) => {
       return {
         ...updated,
         ticketNumber: updated.ticketNo,
+        status: updated.currentStatus,
       }
     })
 
@@ -173,7 +174,7 @@ app.post('/api/tickets', async (req: Request, res: Response) => {
   }
 })
 
-// GET /api/tickets - ดึงรายการ Tickets ของ Requester พร้อม Search, Filter, Pagination (FR-04, FR-05, FR-09)
+// GET /api/tickets - ดึงรายการ Tickets ของ Requester พร้อม Search, Filter, Sort, Pagination (FR-04, FR-05, FR-09)
 app.get('/api/tickets', async (req: Request, res: Response) => {
   try {
     const requesterIdHeader = req.headers['x-requester-id']
@@ -183,13 +184,23 @@ app.get('/api/tickets', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Requester ID is required (x-requester-id header or requesterId query param).' })
     }
 
-    const { search, categoryId, priority, status, page = '1', limit = '8' } = req.query
+    const {
+      search,
+      categoryId,
+      priority,
+      status,
+      sortBy = 'createdAt',
+      order = 'desc',
+      page = '1',
+      limit = '5',
+    } = req.query
+
     const pageNum = Math.max(1, parseInt(page as string, 10) || 1)
-    const take = Math.max(1, parseInt(limit as string, 10) || 8)
+    const take = Math.max(1, parseInt(limit as string, 10) || 5)
     const skip = (pageNum - 1) * take
 
     const where: any = {
-      requesterId, // FR-09: Isolation - only fetch tickets for the requested user
+      requesterId, // FR-09: Isolation - กรองเฉพาะตั๋วของผู้ใช้ที่ระบุ
     }
 
     if (search && typeof search === 'string' && search.trim() !== '') {
@@ -200,17 +211,24 @@ app.get('/api/tickets', async (req: Request, res: Response) => {
       ]
     }
 
-    if (categoryId) {
+    if (categoryId && categoryId !== 'ALL') {
       where.categoryId = Number(categoryId)
     }
 
-    if (priority && ['LOW', 'MEDIUM', 'HIGH'].includes(priority as string)) {
-      where.requestedPriority = priority as Priority
+    if (priority && priority !== 'ALL') {
+      if (['LOW', 'MEDIUM', 'HIGH'].includes(priority as string)) {
+        where.requestedPriority = priority as Priority
+      } else if (priority === 'URGENT') {
+        where.requestedPriority = Priority.HIGH
+      }
     }
 
-    if (status && Object.values(TicketStatus).includes(status as TicketStatus)) {
+    if (status && status !== 'ALL' && Object.values(TicketStatus).includes(status as TicketStatus)) {
       where.currentStatus = status as TicketStatus
     }
+
+    const sortField = typeof sortBy === 'string' ? sortBy : 'createdAt'
+    const sortDirection = order === 'asc' ? 'asc' : 'desc'
 
     const [totalCount, tickets] = await prisma.$transaction([
       prisma.ticket.count({ where }),
@@ -224,7 +242,7 @@ app.get('/api/tickets', async (req: Request, res: Response) => {
             where: { isDeleted: false },
           },
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { [sortField]: sortDirection },
         skip,
         take,
       }),
@@ -233,11 +251,15 @@ app.get('/api/tickets', async (req: Request, res: Response) => {
     const totalPages = Math.ceil(totalCount / take) || 1
 
     return res.status(200).json({
-      data: tickets.map((t) => ({ ...t, ticketNumber: t.ticketNo })),
+      data: tickets.map((t) => ({
+        ...t,
+        ticketNumber: t.ticketNo,
+        status: t.currentStatus,
+      })),
       pagination: {
         page: pageNum,
         limit: take,
-        totalCount,
+        totalItems: totalCount,
         totalPages,
       },
     })
@@ -277,7 +299,11 @@ app.get('/api/tickets/:id', async (req: Request, res: Response) => {
       return res.status(403).json({ error: 'Forbidden: You do not have permission to view this ticket.' })
     }
 
-    return res.status(200).json({ ...ticket, ticketNumber: ticket.ticketNo })
+    return res.status(200).json({
+      ...ticket,
+      ticketNumber: ticket.ticketNo,
+      status: ticket.currentStatus,
+    })
   } catch (error) {
     console.error('Get Ticket Detail Error:', error)
     return res.status(500).json({ error: 'Failed to fetch ticket detail' })

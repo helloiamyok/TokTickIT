@@ -21,8 +21,8 @@ export const DevRequesterSwitcher: React.FC = () => {
         color: '#FFFFFF',
       }}
     >
-      <span style={{ fontWeight: 600, fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.04em', color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-        👤 Profile:
+      <span style={{ fontWeight: 700, fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '0.04em', color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+        🛠️ Dev Requester:
       </span>
       <select
         style={{

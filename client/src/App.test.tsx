@@ -13,7 +13,7 @@ describe('TokTickIT UI Unit Tests', () => {
   })
 
   it('UI-01: TokTickIT heading renders', async () => {
-    global.fetch = vi.fn().mockImplementation((url: string) => {
+    globalThis.fetch = vi.fn().mockImplementation((url: string) => {
       if (url.includes('/categories')) {
         return Promise.resolve({
           ok: true,
@@ -49,7 +49,7 @@ describe('TokTickIT UI Unit Tests', () => {
   })
 
   it('UI-02: Loading state changes to category list', async () => {
-    global.fetch = vi.fn().mockImplementation((url: string) => {
+    globalThis.fetch = vi.fn().mockImplementation((url: string) => {
       if (url.includes('/health')) {
         return Promise.resolve({
           ok: true,
@@ -89,7 +89,7 @@ describe('TokTickIT UI Unit Tests', () => {
   })
 
   it('UI-03: API failure displays a useful error message', async () => {
-    global.fetch = vi.fn().mockImplementation((url: string) => {
+    globalThis.fetch = vi.fn().mockImplementation((url: string) => {
       if (url.includes('/health')) {
         return Promise.reject(new Error('Network error'))
       }
@@ -110,7 +110,7 @@ describe('TokTickIT UI Unit Tests', () => {
   })
 
   it('UI-04: Create Ticket view renders with required form fields', async () => {
-    global.fetch = vi.fn().mockImplementation((url: string) => {
+    globalThis.fetch = vi.fn().mockImplementation((url: string) => {
       if (url.includes('/categories')) {
         return Promise.resolve({
           ok: true,
@@ -145,7 +145,7 @@ describe('TokTickIT UI Unit Tests', () => {
   })
 
   it('UI-05: My Tickets view renders by default with Search, Filters, and Table controls', async () => {
-    global.fetch = vi.fn().mockImplementation((url: string) => {
+    globalThis.fetch = vi.fn().mockImplementation((url: string) => {
       if (url.includes('/tickets')) {
         return Promise.resolve({
           ok: true,

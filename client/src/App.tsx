@@ -54,7 +54,7 @@ function MainContent() {
     <div
       style={{
         minHeight: '100vh',
-        backgroundColor: '#f1f5f9',
+        backgroundColor: '#F5F7F6',
         display: 'flex',
         flexDirection: 'column',
         fontFamily: 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
@@ -64,26 +64,29 @@ function MainContent() {
       {/* Top Navbar with Dev Persona Switcher & Tab Navigation */}
       <header
         style={{
-          backgroundColor: '#ffffff',
-          borderBottom: '1px solid #e2e8f0',
-          padding: '0.75rem 1.5rem',
+          backgroundColor: '#006B3C',
+          borderBottom: '1px solid #005630',
+          padding: '0.65rem 1.75rem',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05)',
+          boxShadow: '0 2px 5px rgba(0, 0, 0, 0.1)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#006B3C' }}>TokTickIT</span>
+            <span style={{ fontSize: '1.35rem', fontWeight: 800, color: '#FFFFFF', letterSpacing: '-0.02em' }}>
+              ⏱️ TokTickIT
+            </span>
             <span
               style={{
-                fontSize: '0.75rem',
-                backgroundColor: '#EAF6EF',
-                color: '#006B3C',
+                fontSize: '0.72rem',
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                color: '#FFFFFF',
                 fontWeight: 600,
-                padding: '0.2rem 0.5rem',
+                padding: '0.15rem 0.5rem',
                 borderRadius: '0.25rem',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
               }}
             >
               Sprint 2
@@ -91,18 +94,18 @@ function MainContent() {
           </div>
 
           {/* Tab Navigation */}
-          <nav style={{ display: 'flex', gap: '0.5rem' }}>
+          <nav style={{ display: 'flex', gap: '0.35rem' }}>
             <button
               onClick={() => setActiveTab('list')}
               style={{
-                padding: '0.45rem 0.9rem',
+                padding: '0.45rem 0.95rem',
                 borderRadius: '6px',
-                fontSize: '0.875rem',
+                fontSize: '0.88rem',
                 fontWeight: 600,
                 border: 'none',
                 cursor: 'pointer',
-                backgroundColor: activeTab === 'list' || activeTab === 'detail' ? '#006B3C' : '#F1F5F9',
-                color: activeTab === 'list' || activeTab === 'detail' ? '#FFFFFF' : '#475569',
+                backgroundColor: activeTab === 'list' || activeTab === 'detail' ? '#0B7A46' : 'transparent',
+                color: '#FFFFFF',
                 transition: 'all 0.15s ease',
               }}
             >
@@ -111,30 +114,30 @@ function MainContent() {
             <button
               onClick={() => setActiveTab('create')}
               style={{
-                padding: '0.45rem 0.9rem',
+                padding: '0.45rem 0.95rem',
                 borderRadius: '6px',
-                fontSize: '0.875rem',
+                fontSize: '0.88rem',
                 fontWeight: 600,
                 border: 'none',
                 cursor: 'pointer',
-                backgroundColor: activeTab === 'create' ? '#006B3C' : '#F1F5F9',
-                color: activeTab === 'create' ? '#FFFFFF' : '#475569',
+                backgroundColor: activeTab === 'create' ? '#0B7A46' : 'transparent',
+                color: '#FFFFFF',
                 transition: 'all 0.15s ease',
               }}
             >
-              📝 Create Ticket
+              ➕ Create Ticket
             </button>
             <button
               onClick={() => setActiveTab('system')}
               style={{
-                padding: '0.45rem 0.9rem',
+                padding: '0.45rem 0.95rem',
                 borderRadius: '6px',
-                fontSize: '0.875rem',
+                fontSize: '0.88rem',
                 fontWeight: 600,
                 border: 'none',
                 cursor: 'pointer',
-                backgroundColor: activeTab === 'system' ? '#0066FF' : '#F1F5F9',
-                color: activeTab === 'system' ? '#FFFFFF' : '#475569',
+                backgroundColor: activeTab === 'system' ? '#0B7A46' : 'transparent',
+                color: '#FFFFFF',
                 transition: 'all 0.15s ease',
               }}
             >

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 export interface RequesterUser {
   id: number;
@@ -22,13 +22,23 @@ export const RequesterProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/requesters') // หรือ /api/requesters ตาม config proxy
+    fetch('/api/requesters')
       .then((res) => res.json())
       .then((data: RequesterUser[]) => {
+        if (!Array.isArray(data)) return;
         setRequesters(data);
-        const savedId = localStorage.getItem('toktickit_requester_id');
+
+        let savedId: string | null = null;
+        try {
+          if (typeof window !== 'undefined' && window.localStorage) {
+            savedId = window.localStorage.getItem('toktickit_requester_id');
+          }
+        } catch {
+          // Ignore localStorage errors
+        }
+
         // เลือก user ที่เคยบันทึกไว้ หรือ default เป็น Active user คนแรก
-        const initialUser = data.find((u) => (savedId ? u.id === Number(savedId) : u.isActive));
+        const initialUser = data.find((u) => (savedId ? u.id === Number(savedId) && u.isActive : u.isActive));
         if (initialUser) {
           setCurrentRequesterState(initialUser);
         }
@@ -39,7 +49,13 @@ export const RequesterProvider = ({ children }: { children: ReactNode }) => {
 
   const setCurrentRequester = (user: RequesterUser) => {
     setCurrentRequesterState(user);
-    localStorage.setItem('toktickit_requester_id', user.id.toString());
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.setItem('toktickit_requester_id', user.id.toString());
+      }
+    } catch {
+      // Ignore localStorage errors
+    }
   };
 
   return (

@@ -194,11 +194,11 @@ export const CreateTicket: React.FC<CreateTicketProps> = ({ currentRequester, on
   }
 
   return (
-    <div style={{ backgroundColor: '#F5F7F6', minHeight: '100vh', padding: '1.5rem 2rem', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-      <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+    <div className="page-container">
+      <div className="content-wrapper">
         
         {/* Breadcrumb Navigation Bar */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.5rem' }}>
           <div style={{ fontSize: '0.9rem', color: '#6B7280' }}>
             <span>My Tickets</span> <span style={{ margin: '0 0.4rem' }}>&gt;</span> <span style={{ color: '#1F2937', fontWeight: 600 }}>Create Ticket</span>
           </div>
@@ -240,16 +240,10 @@ export const CreateTicket: React.FC<CreateTicketProps> = ({ currentRequester, on
         )}
 
         {/* Main Card Surface */}
-        <div style={{
-          backgroundColor: '#FFFFFF',
-          borderRadius: '8px',
-          border: '1px solid #E5E7EB',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
-          padding: '2rem'
-        }}>
+        <div className="card-surface">
           <form onSubmit={handleSubmit}>
             {/* Grid แถวที่ 1: Ticket No (Read-only), Ticket Date (Read-only), Category, Related System */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '1.25rem' }}>
+            <div className="form-grid-row-4">
               <div>
                 <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#374151', marginBottom: '0.4rem' }}>
                   Ticket No.
@@ -346,7 +340,7 @@ export const CreateTicket: React.FC<CreateTicketProps> = ({ currentRequester, on
             </div>
 
             {/* Grid แถวที่ 2: Requester (Read-only), Requested Priority, Current Status */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '1.25rem' }}>
+            <div className="form-grid-row-3">
               <div>
                 <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#374151', marginBottom: '0.4rem' }}>
                   Requester
@@ -485,7 +479,7 @@ export const CreateTicket: React.FC<CreateTicketProps> = ({ currentRequester, on
             </div>
 
             {/* Form Actions */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+            <div className="form-actions">
               {onCancel && (
                 <button
                   type="button"

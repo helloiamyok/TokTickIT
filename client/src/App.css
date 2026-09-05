@@ -1,0 +1,374 @@
+/* =========================================================
+   TokTickIT Zen Green Design System & Responsive Layout
+   Breakpoints:
+     - Desktop: >= 992px
+     - Tablet:  768px - 991px
+     - Mobile:  < 768px
+   ========================================================= */
+
+:root {
+  --primary-green: #006B3C;
+  --primary-green-hover: #005630;
+  --secondary-green: #0B7A46;
+  --pale-green: #EAF6EF;
+  --page-bg: #F5F7F6;
+  --surface-card: #FFFFFF;
+  --text-primary: #1F2937;
+  --text-muted: #6B7280;
+  --border-neutral: #D1D5DB;
+  --border-light: #E5E7EB;
+  --error-color: #DC2626;
+  --error-bg: #FEE2E2;
+  --warning-color: #D97706;
+  --warning-bg: #FEF3C7;
+  --info-color: #1D4ED8;
+  --info-bg: #EFF6FF;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--page-bg);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* App Header & Navigation */
+.app-header {
+  background-color: var(--primary-green);
+  border-bottom: 1px solid var(--primary-green-hover);
+  padding: 0.75rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.header-nav {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.nav-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  background-color: transparent;
+  color: #FFFFFF;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.nav-btn:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.nav-btn.active {
+  background-color: var(--secondary-green);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Dev Requester Switcher */
+.dev-switcher {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  color: #FFFFFF;
+}
+
+.dev-switcher-select {
+  background-color: #FFFFFF;
+  border: 1px solid var(--border-neutral);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  border-radius: 4px;
+  padding: 0.3rem 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  max-width: 260px;
+}
+
+/* Page Container */
+.page-container {
+  background-color: var(--page-bg);
+  min-height: calc(100vh - 70px);
+  padding: 1.75rem 2rem;
+}
+
+.content-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.card-surface {
+  background-color: var(--surface-card);
+  border-radius: 8px;
+  border: 1px solid var(--border-light);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  padding: 2rem;
+}
+
+/* =========================================================
+   Create Ticket Responsive Grids
+   ========================================================= */
+.form-grid-row-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.form-grid-row-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+/* =========================================================
+   My Tickets Responsive Filter Bar & Tables
+   ========================================================= */
+.filter-bar-grid {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.5fr) repeat(4, minmax(130px, 1fr)) minmax(120px, 0.9fr);
+  gap: 0.85rem;
+  align-items: end;
+}
+
+.desktop-table-view {
+  display: block;
+  overflow-x: auto;
+}
+
+.mobile-card-view {
+  display: none;
+}
+
+.ticket-card-item {
+  background: #FFFFFF;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.ticket-card-item:hover {
+  border-color: var(--primary-green);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+}
+
+/* =========================================================
+   Ticket Detail Responsive Layout
+   ========================================================= */
+.detail-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.detail-header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 1rem;
+  margin-bottom: 1.25rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.attachment-header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* =========================================================
+   Responsive Breakpoints Implementation
+   ========================================================= */
+
+/* Tablet Viewport (768px - 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+  .page-container {
+    padding: 1.5rem 1.25rem;
+  }
+
+  .card-surface {
+    padding: 1.5rem;
+  }
+
+  .form-grid-row-4 {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .form-grid-row-3 {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .detail-meta-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .filter-bar-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+  }
+}
+
+/* Mobile Viewport (< 768px) */
+@media (max-width: 767px) {
+  .app-header {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0.75rem 1rem;
+    gap: 0.75rem;
+  }
+
+  .header-left {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .header-brand {
+    justify-content: space-between;
+  }
+
+  .header-nav {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.25rem;
+    width: 100%;
+  }
+
+  .nav-btn {
+    justify-content: center;
+    padding: 0.5rem 0.25rem;
+    font-size: 0.78rem;
+    text-align: center;
+  }
+
+  .dev-switcher {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    padding: 0.5rem;
+  }
+
+  .dev-switcher-select {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .page-container {
+    padding: 1rem 0.75rem;
+  }
+
+  .card-surface {
+    padding: 1.25rem 1rem;
+  }
+
+  /* Stack all fields vertically on mobile */
+  .form-grid-row-4 {
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+  }
+
+  .form-grid-row-3 {
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+  }
+
+  .detail-meta-grid {
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+  }
+
+  .form-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .form-actions button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* My Tickets Mobile Filters & Cards */
+  .filter-bar-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .desktop-table-view {
+    display: none;
+  }
+
+  .mobile-card-view {
+    display: block;
+    padding: 0.75rem;
+  }
+
+  .detail-header-flex {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .attachment-header-flex {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .attachment-header-flex label {
+    width: 100%;
+    text-align: center;
+  }
+}

@@ -39,8 +39,8 @@ describe('MyTickets Component Unit Tests (FR-04, FR-05, FR-09)', () => {
     expect(screen.getByPlaceholderText(/Ticket No or Summary.../i)).toBeInTheDocument()
 
     await waitFor(() => {
-      expect(screen.getByText('TKT-2026-000001')).toBeInTheDocument()
-      expect(screen.getByText('VPN Issue')).toBeInTheDocument()
+      expect(screen.getAllByText('TKT-2026-000001')[0]).toBeInTheDocument()
+      expect(screen.getAllByText('VPN Issue')[0]).toBeInTheDocument()
     })
   })
 

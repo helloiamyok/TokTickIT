@@ -104,3 +104,31 @@ TokTickIT/
 - **Secondary Green**: `#0B7A46`
 - **Pale Green**: `#EAF6EF`
 - **Background**: `#F5F7F6`
+
+
+# TokTickIT - Requester Ticketing MVP (Lab 2)
+
+A responsive, full-stack IT ticketing minimum viable product built with React, Node.js, Express, PostgreSQL, and Prisma. Developed for **CPE 334 Introduction to Software Engineering in the Age of AI Agents**.
+
+## Features Implemented (Sprint 2)
+- **Simulated Development Requester Context:** Select active testing personas loaded dynamically from PostgreSQL without production authentication.
+- **Create Ticket:** Structured submission flow with field validations, attachment constraints, and backend-generated official Ticket Numbers.
+- **My Tickets:** Paginated list view supporting keyword search, multi-field filtering, sorting, responsive card transformations, and complete multi-requester data isolation.
+- **Ticket Detail & Attachments:** Read-only ticket overview, attachment downloads, max 5 active file restrictions (<= 5 MB), and soft-removal with mandatory reason logging.
+- **Zen Green UI Design System:** Consistent color tokens (`#006B3C`, `#0B7A46`, `#EAF6EF`, `#F5F7F6`) and responsive layouts verified for Desktop (≥992px), Tablet (768–991px), and Mobile (<768px).
+
+---
+
+## Project Structure
+```text
+TokTickIT/
+├── client/                      # React frontend application
+├── server/                      # Express backend API & Prisma ORM
+├── docs/lab-02/                 # Lab 2 specification & audit documentation
+│   ├── specification.md
+│   ├── tests.md
+│   ├── ui-spec.md
+│   ├── api-spec.md
+│   ├── reviewer.md
+│   └── ai-use.md
+└── artifacts/lab-02/screenshots/ # Verification evidence across viewports

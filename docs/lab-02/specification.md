@@ -78,4 +78,4 @@ Summarized endpoints (Full detail in `api-spec.md`):
 - [ ] All Acceptance Criteria covered by passing automated unit, API, UI, and E2E tests.
 - [ ] Responsive UI verified on Desktop, Tablet, and Mobile across all 3 screens.
 - [ ] Staging PR peer-reviewed with documentation in `reviewer.md`.
-- [ ] All tests pass on the final `main` branch with 0 skipped tests.
+- [ ] All tests pass on the final `main` branch with 0 skipped tests..

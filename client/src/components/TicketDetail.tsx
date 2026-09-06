@@ -268,8 +268,8 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
   const priorityBadge = getPriorityBadgeStyle(ticket.requestedPriority)
 
   return (
-    <div style={{ backgroundColor: '#F5F7F6', minHeight: '100vh', padding: '2rem', fontFamily: 'system-ui, sans-serif' }}>
-      <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+    <div className="page-container">
+      <div className="content-wrapper">
         
         {/* Navigation Bar */}
         <button
@@ -291,17 +291,17 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
         </button>
 
         {/* Ticket Header Card */}
-        <div style={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #E5E7EB', padding: '1.75rem', marginBottom: '1.5rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #E5E7EB', paddingBottom: '1rem', marginBottom: '1.25rem' }}>
+        <div className="card-surface" style={{ marginBottom: '1.5rem' }}>
+          <div className="detail-header-flex">
             <div>
               <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#006B3C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 Ticket Details
               </span>
-              <h1 style={{ margin: '0.25rem 0 0', fontSize: '1.5rem', color: '#111827' }}>
+              <h1 style={{ margin: '0.25rem 0 0', fontSize: '1.5rem', color: '#111827', wordBreak: 'break-word' }}>
                 {ticketNo}: {ticket.summary}
               </h1>
             </div>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
               <span style={{ padding: '0.3rem 0.75rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600, backgroundColor: statusBadge.bg, color: statusBadge.text, border: `1px solid ${statusBadge.border}` }}>
                 {currentStatus}
               </span>
@@ -312,7 +312,7 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
           </div>
 
           {/* Key-Value Details Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '1.5rem' }}>
+          <div className="detail-meta-grid">
             <div>
               <div style={{ fontSize: '0.78rem', color: '#6B7280', fontWeight: 600, textTransform: 'uppercase' }}>Requester</div>
               <div style={{ fontSize: '0.95rem', color: '#1F2937', fontWeight: 500, marginTop: '0.2rem' }}>
@@ -350,8 +350,8 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
         </div>
 
         {/* Attachment Management Card */}
-        <div style={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #E5E7EB', padding: '1.75rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+        <div className="card-surface">
+          <div className="attachment-header-flex">
             <div>
               <h2 style={{ margin: 0, fontSize: '1.25rem', color: '#111827' }}>Attachments</h2>
               <span style={{ fontSize: '0.82rem', color: '#6B7280' }}>

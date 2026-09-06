@@ -127,11 +127,11 @@ export const MyTickets: React.FC<MyTicketsProps> = ({
     categoryFilter !== 'ALL';
 
   return (
-    <div style={{ backgroundColor: '#F5F7F6', minHeight: '100vh', padding: '2rem', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+    <div className="page-container">
+      <div className="content-wrapper">
         
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
           <div>
             <h1 style={{ margin: 0, fontSize: '1.6rem', color: '#006B3C' }}>My Tickets</h1>
             <p style={{ margin: '0.25rem 0 0', color: '#6B7280', fontSize: '0.9rem' }}>
@@ -159,7 +159,7 @@ export const MyTickets: React.FC<MyTicketsProps> = ({
 
         {/* Filter Controls */}
         <div style={{ backgroundColor: '#FFFFFF', padding: '1.25rem', borderRadius: '8px', border: '1px solid #E5E7EB', marginBottom: '1.5rem' }}>
-          <form onSubmit={handleSearchSubmit} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', alignItems: 'end' }}>
+          <form onSubmit={handleSearchSubmit} className="filter-bar-grid">
             <div>
               <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#374151', marginBottom: '0.3rem' }}>Search</label>
               <input
@@ -291,58 +291,96 @@ export const MyTickets: React.FC<MyTicketsProps> = ({
               </div>
             )
           ) : (
-            // Data Table
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
-                <thead>
-                  <tr style={{ backgroundColor: '#F9FAFB', borderBottom: '1px solid #E5E7EB', color: '#4B5563' }}>
-                    <th style={{ padding: '0.85rem 1rem', fontWeight: 600 }}>Ticket No.</th>
-                    <th style={{ padding: '0.85rem 1rem', fontWeight: 600 }}>Summary</th>
-                    <th style={{ padding: '0.85rem 1rem', fontWeight: 600 }}>Category</th>
-                    <th style={{ padding: '0.85rem 1rem', fontWeight: 600 }}>Priority</th>
-                    <th style={{ padding: '0.85rem 1rem', fontWeight: 600 }}>Status</th>
-                    <th style={{ padding: '0.85rem 1rem', fontWeight: 600 }}>Created Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tickets.map((t) => {
-                    const ticketNo = t.ticketNumber || t.ticketNo || `TKT-${t.id}`;
-                    const currentStatus = t.status || t.currentStatus || 'NEW';
-                    const statusBadge = getStatusBadgeStyle(currentStatus);
-                    const priorityBadge = getPriorityBadgeStyle(t.requestedPriority);
-                    return (
-                      <tr
-                        key={t.id}
-                        onClick={() => onSelectTicket && onSelectTicket(t.id)}
-                        style={{ borderBottom: '1px solid #E5E7EB', cursor: onSelectTicket ? 'pointer' : 'default' }}
-                      >
-                        <td style={{ padding: '0.85rem 1rem', fontWeight: 600, color: '#006B3C' }}>{ticketNo}</td>
-                        <td style={{ padding: '0.85rem 1rem', color: '#1F2937', fontWeight: 500 }}>{t.summary}</td>
-                        <td style={{ padding: '0.85rem 1rem', color: '#4B5563' }}>{t.category?.name || '-'}</td>
-                        <td style={{ padding: '0.85rem 1rem' }}>
-                          <span style={{ padding: '0.2rem 0.6rem', borderRadius: '12px', fontSize: '0.78rem', fontWeight: 600, backgroundColor: priorityBadge.bg, color: priorityBadge.text }}>
-                            {t.requestedPriority}
-                          </span>
-                        </td>
-                        <td style={{ padding: '0.85rem 1rem' }}>
-                          <span style={{ padding: '0.25rem 0.65rem', borderRadius: '12px', fontSize: '0.78rem', fontWeight: 600, backgroundColor: statusBadge.bg, color: statusBadge.text, border: `1px solid ${statusBadge.border}` }}>
+            <>
+              {/* Desktop / Tablet Data Table */}
+              <div className="desktop-table-view">
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: '#F9FAFB', borderBottom: '1px solid #E5E7EB', color: '#4B5563' }}>
+                      <th style={{ padding: '0.85rem 1rem', fontWeight: 600 }}>Ticket No.</th>
+                      <th style={{ padding: '0.85rem 1rem', fontWeight: 600 }}>Summary</th>
+                      <th style={{ padding: '0.85rem 1rem', fontWeight: 600 }}>Category</th>
+                      <th style={{ padding: '0.85rem 1rem', fontWeight: 600 }}>Priority</th>
+                      <th style={{ padding: '0.85rem 1rem', fontWeight: 600 }}>Status</th>
+                      <th style={{ padding: '0.85rem 1rem', fontWeight: 600 }}>Created Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tickets.map((t) => {
+                      const ticketNo = t.ticketNumber || t.ticketNo || `TKT-${t.id}`;
+                      const currentStatus = t.status || t.currentStatus || 'NEW';
+                      const statusBadge = getStatusBadgeStyle(currentStatus);
+                      const priorityBadge = getPriorityBadgeStyle(t.requestedPriority);
+                      return (
+                        <tr
+                          key={t.id}
+                          onClick={() => onSelectTicket && onSelectTicket(t.id)}
+                          style={{ borderBottom: '1px solid #E5E7EB', cursor: onSelectTicket ? 'pointer' : 'default' }}
+                        >
+                          <td style={{ padding: '0.85rem 1rem', fontWeight: 600, color: '#006B3C' }}>{ticketNo}</td>
+                          <td style={{ padding: '0.85rem 1rem', color: '#1F2937', fontWeight: 500 }}>{t.summary}</td>
+                          <td style={{ padding: '0.85rem 1rem', color: '#4B5563' }}>{t.category?.name || '-'}</td>
+                          <td style={{ padding: '0.85rem 1rem' }}>
+                            <span style={{ padding: '0.2rem 0.6rem', borderRadius: '12px', fontSize: '0.78rem', fontWeight: 600, backgroundColor: priorityBadge.bg, color: priorityBadge.text }}>
+                              {t.requestedPriority}
+                            </span>
+                          </td>
+                          <td style={{ padding: '0.85rem 1rem' }}>
+                            <span style={{ padding: '0.25rem 0.65rem', borderRadius: '12px', fontSize: '0.78rem', fontWeight: 600, backgroundColor: statusBadge.bg, color: statusBadge.text, border: `1px solid ${statusBadge.border}` }}>
+                              {currentStatus}
+                            </span>
+                          </td>
+                          <td style={{ padding: '0.85rem 1rem', color: '#6B7280', fontSize: '0.85rem' }}>
+                            {new Date(t.createdAt).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Card View (<768px) */}
+              <div className="mobile-card-view">
+                {tickets.map((t) => {
+                  const ticketNo = t.ticketNumber || t.ticketNo || `TKT-${t.id}`;
+                  const currentStatus = t.status || t.currentStatus || 'NEW';
+                  const statusBadge = getStatusBadgeStyle(currentStatus);
+                  const priorityBadge = getPriorityBadgeStyle(t.requestedPriority);
+                  return (
+                    <div
+                      key={t.id}
+                      className="ticket-card-item"
+                      onClick={() => onSelectTicket && onSelectTicket(t.id)}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                        <span style={{ fontWeight: 700, color: '#006B3C', fontSize: '0.95rem' }}>{ticketNo}</span>
+                        <div style={{ display: 'flex', gap: '0.35rem' }}>
+                          <span style={{ padding: '0.15rem 0.5rem', borderRadius: '10px', fontSize: '0.72rem', fontWeight: 600, backgroundColor: statusBadge.bg, color: statusBadge.text, border: `1px solid ${statusBadge.border}` }}>
                             {currentStatus}
                           </span>
-                        </td>
-                        <td style={{ padding: '0.85rem 1rem', color: '#6B7280', fontSize: '0.85rem' }}>
-                          {new Date(t.createdAt).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                          <span style={{ padding: '0.15rem 0.5rem', borderRadius: '10px', fontSize: '0.72rem', fontWeight: 600, backgroundColor: priorityBadge.bg, color: priorityBadge.text }}>
+                            {t.requestedPriority}
+                          </span>
+                        </div>
+                      </div>
+                      <div style={{ fontWeight: 600, color: '#1F2937', fontSize: '0.92rem', marginBottom: '0.35rem' }}>
+                        {t.summary}
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', color: '#6B7280' }}>
+                        <span>📂 {t.category?.name || '-'}</span>
+                        <span>📅 {new Date(t.createdAt).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
           )}
 
           {/* Pagination */}
           {tickets.length > 0 && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.85rem 1.25rem', borderTop: '1px solid #E5E7EB', backgroundColor: '#F9FAFB' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.85rem 1.25rem', borderTop: '1px solid #E5E7EB', backgroundColor: '#F9FAFB', flexWrap: 'wrap', gap: '0.75rem' }}>
               <span style={{ fontSize: '0.85rem', color: '#6B7280' }}>
                 Showing page <strong>{page}</strong> of <strong>{totalPages}</strong> (Total {totalItems} tickets)
               </span>

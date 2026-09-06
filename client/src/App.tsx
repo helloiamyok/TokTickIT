@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import './App.css'
 import { RequesterProvider, useRequester } from './context/RequesterContext'
 import { DevRequesterSwitcher } from './components/DevRequesterSwitcher'
 import { CreateTicket } from './components/CreateTicket'
@@ -57,24 +58,12 @@ function MainContent() {
         backgroundColor: '#F5F7F6',
         display: 'flex',
         flexDirection: 'column',
-        fontFamily: 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-        boxSizing: 'border-box',
       }}
     >
       {/* Top Navbar with Dev Persona Switcher & Tab Navigation */}
-      <header
-        style={{
-          backgroundColor: '#006B3C',
-          borderBottom: '1px solid #005630',
-          padding: '0.65rem 1.75rem',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          boxShadow: '0 2px 5px rgba(0, 0, 0, 0.1)',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+      <header className="app-header">
+        <div className="header-left">
+          <div className="header-brand">
             <span style={{ fontSize: '1.35rem', fontWeight: 800, color: '#FFFFFF', letterSpacing: '-0.02em' }}>
               ⏱️ TokTickIT
             </span>
@@ -94,52 +83,22 @@ function MainContent() {
           </div>
 
           {/* Tab Navigation */}
-          <nav style={{ display: 'flex', gap: '0.35rem' }}>
+          <nav className="header-nav">
             <button
               onClick={() => setActiveTab('list')}
-              style={{
-                padding: '0.45rem 0.95rem',
-                borderRadius: '6px',
-                fontSize: '0.88rem',
-                fontWeight: 600,
-                border: 'none',
-                cursor: 'pointer',
-                backgroundColor: activeTab === 'list' || activeTab === 'detail' ? '#0B7A46' : 'transparent',
-                color: '#FFFFFF',
-                transition: 'all 0.15s ease',
-              }}
+              className={`nav-btn ${activeTab === 'list' || activeTab === 'detail' ? 'active' : ''}`}
             >
               📋 My Tickets
             </button>
             <button
               onClick={() => setActiveTab('create')}
-              style={{
-                padding: '0.45rem 0.95rem',
-                borderRadius: '6px',
-                fontSize: '0.88rem',
-                fontWeight: 600,
-                border: 'none',
-                cursor: 'pointer',
-                backgroundColor: activeTab === 'create' ? '#0B7A46' : 'transparent',
-                color: '#FFFFFF',
-                transition: 'all 0.15s ease',
-              }}
+              className={`nav-btn ${activeTab === 'create' ? 'active' : ''}`}
             >
               ➕ Create Ticket
             </button>
             <button
               onClick={() => setActiveTab('system')}
-              style={{
-                padding: '0.45rem 0.95rem',
-                borderRadius: '6px',
-                fontSize: '0.88rem',
-                fontWeight: 600,
-                border: 'none',
-                cursor: 'pointer',
-                backgroundColor: activeTab === 'system' ? '#0B7A46' : 'transparent',
-                color: '#FFFFFF',
-                transition: 'all 0.15s ease',
-              }}
+              className={`nav-btn ${activeTab === 'system' ? 'active' : ''}`}
             >
               🔍 System Status
             </button>

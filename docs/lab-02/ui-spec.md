@@ -75,3 +75,25 @@
 | **Desktop** | `>= 992px` | Multi-column grid, full 6-column data table, side-by-side key details. Max width `1200px` centered. |
 | **Tablet** | `768px - 991px` | 2-column form layout, horizontally scrollable data table, touch-friendly buttons. |
 | **Mobile** | `< 768px` | 1-column vertically stacked form fields, responsive card list for tickets, collapsible navigation. |
+
+---
+
+## 5. Visual Inspection Checklist & Screenshot Artifacts
+
+### A. Screenshot Artifacts
+
+| Screen | Desktop (`≥992px`) | Tablet (`768-991px`) | Mobile (`<768px`) |
+|---|---|---|---|
+| **Create Ticket** | `artifacts/lab-02/screenshots/create-ticket/desktop.png` | `artifacts/lab-02/screenshots/create-ticket/tablet.png` | `artifacts/lab-02/screenshots/create-ticket/mobile.png` |
+| **My Tickets** | `artifacts/lab-02/screenshots/my-tickets/desktop.png` | `artifacts/lab-02/screenshots/my-tickets/tablet.png` | `artifacts/lab-02/screenshots/my-tickets/mobile.png` |
+| **Ticket Detail** | `artifacts/lab-02/screenshots/ticket-detail/desktop.png` | `artifacts/lab-02/screenshots/ticket-detail/tablet.png` | `artifacts/lab-02/screenshots/ticket-detail/mobile.png` |
+
+### B. Completed Visual Inspection Checklist
+
+- [x] **Colors & Contrast**: Zen Green tokens (`#006B3C`, `#0B7A46`, `#EAF6EF`, `#F5F7F6`) consistently applied across headers, badges, and backgrounds.
+- [x] **Editable vs Read-Only Fields**: Editable inputs feature white backgrounds with clear `#D1D5DB` borders; read-only fields (Ticket No, Ticket Date, Requester) shaded `#F0F2F1`.
+- [x] **Validation Placement**: Field-level validation messages appear immediately below the input with `#E02424` styling and red asterisks on required labels.
+- [x] **Button Hierarchy**: Primary CTA buttons (`#006B3C`), secondary outline buttons, destructive delete buttons (`#DC2626`/`#FEE2E2`), and busy/disabled states (`#9CA3AF`/`#E5E7EB`).
+- [x] **No Clipping / Overlap**: Typography, labels, and icons remain unobstructed across all viewports.
+- [x] **No Horizontal Overflow**: Mobile layout (`<768px`) stacks columns vertically and maintains 100% viewport width without horizontal scrolling.
+- [x] **Cross-Requester Security**: 403 Forbidden banner gracefully displays with return navigation when attempting to access unauthorized tickets.

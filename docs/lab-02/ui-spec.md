@@ -96,4 +96,4 @@
 - [x] **Button Hierarchy**: Primary CTA buttons (`#006B3C`), secondary outline buttons, destructive delete buttons (`#DC2626`/`#FEE2E2`), and busy/disabled states (`#9CA3AF`/`#E5E7EB`).
 - [x] **No Clipping / Overlap**: Typography, labels, and icons remain unobstructed across all viewports.
 - [x] **No Horizontal Overflow**: Mobile layout (`<768px`) stacks columns vertically and maintains 100% viewport width without horizontal scrolling.
-- [x] **Cross-Requester Security**: 403 Forbidden banner gracefully displays with return navigation when attempting to access unauthorized tickets.
+- [x] **Cross-Requester Security**: 403 Forbidden banner gracefully displays with return navigation when attempting to access unauthorized tickets..

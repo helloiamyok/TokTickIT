@@ -209,4 +209,4 @@
 ```
 - **Errors**:
   - `400 Bad Request`: Missing mandatory reason.
-  - `403 Forbidden`: Attachment belongs to another requester.
+  - `403 Forbidden`: Attachment belongs to another requester..

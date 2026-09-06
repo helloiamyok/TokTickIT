@@ -29,7 +29,7 @@ Testing covers multiple levels to ensure high quality and full traceability to A
 
 ---
 
-## 3. Test Execution Commands & Passing Output
+## 3. Test Execution Commands & Passing Outputt
 
 ### Server Tests
 ```bash

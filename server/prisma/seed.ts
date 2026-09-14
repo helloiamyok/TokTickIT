@@ -14,6 +14,8 @@ async function main() {
   await prisma.attachment.deleteMany();
   await prisma.ticket.deleteMany();
   await prisma.user.deleteMany();
+  await prisma.category.deleteMany();
+  await prisma.relatedSystem.deleteMany();
 
   // 2. Seed Categories (เดิมจาก Sprint 2)
   const categoriesData = [
@@ -23,15 +25,10 @@ async function main() {
     { name: 'Network' },
   ];
 
-  const categories = await Promise.all(
-    categoriesData.map((cat) =>
-      prisma.category.upsert({
-        where: { name: cat.name },
-        update: {},
-        create: { name: cat.name },
-      })
-    )
-  );
+  const categories = [];
+  for (const cat of categoriesData) {
+    categories.push(await prisma.category.create({ data: { name: cat.name } }));
+  }
 
   const hardwareCat = categories.find((c) => c.name === 'Hardware')!;
   const networkCat = categories.find((c) => c.name === 'Network')!;
@@ -48,15 +45,10 @@ async function main() {
     { name: 'Printer' },
   ];
 
-  const relatedSystems = await Promise.all(
-    relatedSystemsData.map((sys) =>
-      prisma.relatedSystem.upsert({
-        where: { name: sys.name },
-        update: {},
-        create: { name: sys.name },
-      })
-    )
-  );
+  const relatedSystems = [];
+  for (const sys of relatedSystemsData) {
+    relatedSystems.push(await prisma.relatedSystem.create({ data: { name: sys.name } }));
+  }
 
   const laptopSys = relatedSystems.find((s) => s.name === 'Corporate Laptop')!;
   const vpnSys = relatedSystems.find((s) => s.name === 'VPN')!;

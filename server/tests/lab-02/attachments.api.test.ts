@@ -11,7 +11,7 @@ describe('Lab 2: Attachments API Tests (FR-07, FR-08, BR-05, BR-06, BR-07 / AC-0
   let createdAttachmentId: number
 
   beforeAll(async () => {
-    const user = await prisma.requesterUser.findFirst({ where: { isActive: true } })
+    const user = await prisma.user.findFirst({ where: { role: 'REQUESTER', isActive: true } })
     userId = user ? user.id : 1
 
     const cat = await prisma.category.findFirst()

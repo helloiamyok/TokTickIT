@@ -11,7 +11,7 @@ describe('Lab 2: Ticket Detail API Tests (FR-06, FR-09 / AC-03)', () => {
   let user1TicketId: number
 
   beforeAll(async () => {
-    const users = await prisma.requesterUser.findMany({ where: { isActive: true }, take: 2 })
+    const users = await prisma.user.findMany({ where: { role: 'REQUESTER', isActive: true }, take: 2 })
     user1Id = users[0].id
     user2Id = users[1]?.id || users[0].id
 

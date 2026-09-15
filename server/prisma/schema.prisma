@@ -7,6 +7,12 @@ generator client {
   provider = "prisma-client-js"
 }
 
+enum Role {
+  REQUESTER
+  IT_STAFF
+  ADMINISTRATOR
+}
+
 enum Priority {
   LOW
   MEDIUM
@@ -15,23 +21,31 @@ enum Priority {
 
 enum TicketStatus {
   NEW
+  OPEN
   IN_PROGRESS
-  PENDING
+  WAITING_FOR_REQUESTER
   RESOLVED
   CLOSED
+  REOPENED
+  CANCELLED
 }
 
-model RequesterUser {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model User {
+  id                 Int             @id @default(autoincrement())
+  email              String          @unique
+  passwordHash       String
+  name               String
+  role               Role            @default(REQUESTER)
+  isActive           Boolean         @default(true)
+  mustChangePassword Boolean         @default(false)
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
 
-  tickets Ticket[]
+  requestedTickets   Ticket[]        @relation("TicketRequester")
+  assignedTickets    Ticket[]        @relation("TicketAssignee")
+  comments           TicketComment[]
 
-  @@map("requester_users")
+  @@map("users")
 }
 
 model Category {
@@ -41,7 +55,7 @@ model Category {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  tickets Ticket[]
+  tickets   Ticket[]
 
   @@map("categories")
 }
@@ -53,34 +67,59 @@ model RelatedSystem {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  tickets Ticket[]
+  tickets   Ticket[]
 
   @@map("related_systems")
 }
 
 model Ticket {
-  id                Int          @id @default(autoincrement())
-  ticketNo          String       @unique
-  summary           String
-  description       String
-  requestedPriority Priority     @default(MEDIUM)
-  itPriority        Priority     @default(MEDIUM)
-  currentStatus     TicketStatus @default(NEW)
-  requesterId       Int
-  categoryId        Int
-  relatedSystemId   Int
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
+  id                           Int             @id @default(autoincrement())
+  ticketNo                     String          @unique
+  summary                      String
+  description                  String
+  requestedPriority            Priority        @default(MEDIUM)
+  itPriority                   Priority        @default(MEDIUM)
+  currentStatus                TicketStatus    @default(NEW)
+  requesterResolutionIndicated Boolean         @default(false)
+  resolutionSummary            String?
+  createdAt                    DateTime        @default(now())
+  updatedAt                    DateTime        @updatedAt
 
-  requester     RequesterUser @relation(fields: [requesterId], references: [id])
-  category      Category      @relation(fields: [categoryId], references: [id])
-  relatedSystem RelatedSystem @relation(fields: [relatedSystemId], references: [id])
-  attachments   Attachment[]
+  requesterId                  Int
+  requester                    User            @relation("TicketRequester", fields: [requesterId], references: [id])
+
+  assignedToId                 Int?
+  assignedTo                   User?           @relation("TicketAssignee", fields: [assignedToId], references: [id])
+
+  categoryId                   Int
+  category                     Category        @relation(fields: [categoryId], references: [id])
+
+  relatedSystemId              Int
+  relatedSystem                RelatedSystem   @relation(fields: [relatedSystemId], references: [id])
+
+  attachments                  Attachment[]
+  comments                     TicketComment[]
 
   @@index([requesterId])
+  @@index([assignedToId])
   @@index([categoryId])
   @@index([ticketNo])
   @@map("tickets")
+}
+
+model TicketComment {
+  id         Int      @id @default(autoincrement())
+  ticketId   Int
+  ticket     Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  authorId   Int
+  author     User     @relation(fields: [authorId], references: [id])
+  content    String
+  isInternal Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([ticketId])
+  @@index([authorId])
+  @@map("ticket_comments")
 }
 
 model Attachment {
@@ -96,7 +135,7 @@ model Attachment {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  ticket        Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 
   @@index([ticketId])
   @@map("attachments")

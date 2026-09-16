@@ -2,25 +2,56 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import request from 'supertest'
 import app from '../../src/index'
 import { PrismaClient } from '@prisma/client'
+import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
 
-describe('Lab 2: My Tickets API Tests (API-06 / FR-04, FR-05, FR-09)', () => {
+describe('Lab 2: My Tickets API Tests (Authenticated Regression)', () => {
   let user1Id: number
   let user2Id: number
+  let user1Cookie: string
   let cat1Id: number
   let cat2Id: number
   let sysId: number
 
   beforeAll(async () => {
-    // ดึง Requester และ Category ที่มีอยู่ในฐานข้อมูล
-    const users = await prisma.user.findMany({ where: { role: 'REQUESTER', isActive: true }, take: 2 })
-    user1Id = users[0].id
-    user2Id = users[1]?.id || users[0].id
+    const defaultHash = await bcrypt.hash('Password123!', 10)
+
+    const user1 = await prisma.user.upsert({
+      where: { email: 'jennifer.anderson@tiktockit.com' },
+      update: { passwordHash: defaultHash, isActive: true },
+      create: {
+        email: 'jennifer.anderson@tiktockit.com',
+        name: 'Jennifer Anderson',
+        passwordHash: defaultHash,
+        role: 'REQUESTER',
+        isActive: true,
+      },
+    })
+    user1Id = user1.id
+
+    const user2 = await prisma.user.upsert({
+      where: { email: 'amanda.clark@tiktockit.com' },
+      update: { passwordHash: defaultHash, isActive: true },
+      create: {
+        email: 'amanda.clark@tiktockit.com',
+        name: 'Amanda Clark',
+        passwordHash: defaultHash,
+        role: 'REQUESTER',
+        isActive: true,
+      },
+    })
+    user2Id = user2.id
+
+    const loginRes = await request(app)
+      .post('/api/auth/login')
+      .send({ email: 'jennifer.anderson@tiktockit.com', password: 'Password123!' })
+    const cookies = loginRes.headers['set-cookie']
+    user1Cookie = Array.isArray(cookies) ? cookies[0] : cookies || ''
 
     const categories = await prisma.category.findMany({ take: 2 })
-    cat1Id = categories[0].id
-    cat2Id = categories[1]?.id || categories[0].id
+    cat1Id = categories[0]?.id || 1
+    cat2Id = categories[1]?.id || cat1Id
 
     const sys = await prisma.relatedSystem.findFirst()
     sysId = sys ? sys.id : 1
@@ -40,25 +71,24 @@ describe('Lab 2: My Tickets API Tests (API-06 / FR-04, FR-05, FR-09)', () => {
     })
 
     // สร้าง Seed ตั๋วสำหรับ User 2
-    if (user2Id !== user1Id) {
-      await prisma.ticket.create({
-        data: {
-          ticketNo: `TKT-TEST-${Date.now()}-2`,
-          summary: 'Software License Expired',
-          description: 'Photoshop license expired.',
-          categoryId: cat2Id,
-          relatedSystemId: sysId,
-          requesterId: user2Id,
-          requestedPriority: 'LOW',
-          currentStatus: 'RESOLVED',
-        },
-      })
-    }
+    await prisma.ticket.create({
+      data: {
+        ticketNo: `TKT-TEST-${Date.now()}-2`,
+        summary: 'Software License Expired',
+        description: 'Photoshop license expired.',
+        categoryId: cat2Id,
+        relatedSystemId: sysId,
+        requesterId: user2Id,
+        requestedPriority: 'LOW',
+        currentStatus: 'RESOLVED',
+      },
+    })
   })
 
   it('FR-09 / AC-06: Returns only tickets owned by the current requester (Isolation)', async () => {
     const res = await request(app)
-      .get(`/api/tickets?requesterId=${user1Id}`)
+      .get('/api/tickets')
+      .set('Cookie', user1Cookie)
 
     expect(res.status).toBe(200)
     expect(res.body).toHaveProperty('data')
@@ -72,7 +102,8 @@ describe('Lab 2: My Tickets API Tests (API-06 / FR-04, FR-05, FR-09)', () => {
 
   it('FR-05: Filters tickets by search keyword', async () => {
     const res = await request(app)
-      .get(`/api/tickets?requesterId=${user1Id}&search=VPN`)
+      .get('/api/tickets?search=VPN')
+      .set('Cookie', user1Cookie)
 
     expect(res.status).toBe(200)
     for (const t of res.body.data) {
@@ -83,7 +114,8 @@ describe('Lab 2: My Tickets API Tests (API-06 / FR-04, FR-05, FR-09)', () => {
 
   it('FR-05: Filters tickets by category', async () => {
     const res = await request(app)
-      .get(`/api/tickets?requesterId=${user1Id}&categoryId=${cat1Id}`)
+      .get(`/api/tickets?categoryId=${cat1Id}`)
+      .set('Cookie', user1Cookie)
 
     expect(res.status).toBe(200)
     for (const t of res.body.data) {
@@ -93,7 +125,8 @@ describe('Lab 2: My Tickets API Tests (API-06 / FR-04, FR-05, FR-09)', () => {
 
   it('FR-04: Returns pagination metadata (page, limit, totalPages)', async () => {
     const res = await request(app)
-      .get(`/api/tickets?requesterId=${user1Id}&page=1&limit=2`)
+      .get('/api/tickets?page=1&limit=2')
+      .set('Cookie', user1Cookie)
 
     expect(res.status).toBe(200)
     expect(res.body).toHaveProperty('pagination')
@@ -102,9 +135,9 @@ describe('Lab 2: My Tickets API Tests (API-06 / FR-04, FR-05, FR-09)', () => {
     expect(res.body.pagination).toHaveProperty('totalPages')
   })
 
-  it('Rejects request without requesterId with 400 Bad Request', async () => {
+  it('Rejects request without authentication with 401 Unauthorized', async () => {
     const res = await request(app).get('/api/tickets')
-    expect(res.status).toBe(400)
+    expect(res.status).toBe(401)
     expect(res.body).toHaveProperty('error')
   })
 })

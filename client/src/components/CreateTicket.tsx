@@ -95,10 +95,9 @@ export const CreateTicket: React.FC<CreateTicketProps> = ({ currentRequester, on
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-requester-id': String(currentRequester.id),
         },
+        credentials: 'include',
         body: JSON.stringify({
-          requesterId: currentRequester.id,
           summary: summary.trim(),
           description: description.trim(),
           categoryId: Number(categoryId),

@@ -32,7 +32,17 @@ router.post('/login', async (req: Request, res: Response) => {
       return res.status(403).json({ error: 'Account is deactivated. Please contact an administrator.' });
     }
 
-    const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '1d' });
+    const token = jwt.sign(
+      {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        mustChangePassword: user.mustChangePassword,
+      },
+      JWT_SECRET,
+      { expiresIn: '1d' }
+    );
 
     // ส่ง cookie กลับไป
     res.cookie('token', token, {

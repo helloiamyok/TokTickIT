@@ -58,7 +58,6 @@ export const MyTickets: React.FC<MyTicketsProps> = ({
 
     try {
       const queryParams = new URLSearchParams({
-        requesterId: String(currentRequester.id),
         search: search.trim(),
         status: statusFilter,
         priority: priorityFilter,
@@ -69,7 +68,9 @@ export const MyTickets: React.FC<MyTicketsProps> = ({
         limit: '5',
       });
 
-      const res = await fetch(`/api/tickets?${queryParams.toString()}`);
+      const res = await fetch(`/api/tickets?${queryParams.toString()}`, {
+        credentials: 'include',
+      });
       if (!res.ok) throw new Error('Failed to fetch tickets');
 
       const result = await res.json();

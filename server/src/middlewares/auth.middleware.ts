@@ -10,9 +10,13 @@ export interface AuthUser {
   id: number;
   email: string;
   name: string;
-  role: Role;
-  isActive: boolean;
-  mustChangePassword: boolean;
+  role: Role | 'REQUESTER' | 'IT_STAFF' | 'ADMINISTRATOR';
+  isActive?: boolean;
+  mustChangePassword?: boolean;
+}
+
+export interface AuthRequest extends Request {
+  user?: AuthUser;
 }
 
 declare global {
@@ -23,15 +27,17 @@ declare global {
   }
 }
 
-export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
+export const authenticate = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  const token = req.cookies?.token || (req.headers.authorization?.startsWith('Bearer ') ? req.headers.authorization.split(' ')[1] : req.headers.authorization);
+
+  if (!token) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+
   try {
-    const token = req.cookies?.token || req.headers.authorization?.replace('Bearer ', '');
-
-    if (!token) {
-      return res.status(401).json({ error: 'Authentication required' });
-    }
-
-    const decoded = jwt.verify(token, JWT_SECRET) as { id: number };
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    
+    // Fetch active user from database to ensure account is valid and role is current
     const user = await prisma.user.findUnique({
       where: { id: decoded.id },
       select: {
@@ -50,7 +56,21 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
 
     req.user = user;
     next();
-  } catch (error) {
+  } catch (err) {
     return res.status(401).json({ error: 'Invalid or expired session token' });
   }
+};
+
+export const requireRole = (allowedRoles: string[]) => {
+  return (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    if (!allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({ error: 'Access forbidden: insufficient role permissions' });
+    }
+
+    next();
+  };
 };

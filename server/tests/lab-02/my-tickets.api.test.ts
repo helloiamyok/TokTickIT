@@ -14,7 +14,7 @@ describe('Lab 2: My Tickets API Tests (API-06 / FR-04, FR-05, FR-09)', () => {
 
   beforeAll(async () => {
     // ดึง Requester และ Category ที่มีอยู่ในฐานข้อมูล
-    const users = await prisma.requesterUser.findMany({ where: { isActive: true }, take: 2 })
+    const users = await prisma.user.findMany({ where: { role: 'REQUESTER', isActive: true }, take: 2 })
     user1Id = users[0].id
     user2Id = users[1]?.id || users[0].id
 

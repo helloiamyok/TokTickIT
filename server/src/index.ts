@@ -1,13 +1,26 @@
+import 'dotenv/config'
 import express, { Request, Response } from 'express'
 import cors from 'cors'
+import cookieParser from 'cookie-parser'
 import { PrismaClient, Priority, TicketStatus } from '@prisma/client'
+import authRoutes from './routes/auth.routes'
 
 const app = express()
 const prisma = new PrismaClient()
 const PORT = process.env.PORT || 3000
 
-app.use(cors())
+// ตั้งค่า CORS ให้รองรับ Cookie/Credentials สำหรับ Authentication
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    credentials: true,
+  })
+)
 app.use(express.json())
+app.use(cookieParser())
+
+// เชื่อมต่อ Auth Routes สำหรับ Sprint 3
+app.use('/api/auth', authRoutes)
 
 // ฟังก์ชันสร้าง Ticket Number แบบเป็นทางการ (BR-01) เช่น TKT-2026-000001
 function generateTicketNumber(id: number): string {
@@ -57,7 +70,8 @@ app.get('/api/related-systems', async (_req: Request, res: Response) => {
 // GET /api/requesters - ดึงรายชื่อ Requester ทั้งหมดสำหรับ Persona Switcher
 app.get('/api/requesters', async (_req: Request, res: Response) => {
   try {
-    const requesters = await prisma.requesterUser.findMany({
+    const requesters = await prisma.user.findMany({
+      where: { role: 'REQUESTER' },
       orderBy: { id: 'asc' },
     })
     res.status(200).json(requesters)
@@ -70,8 +84,8 @@ app.get('/api/requesters', async (_req: Request, res: Response) => {
 // GET /api/requesters/active - ดึงรายชื่อ Active Requester เท่านั้น
 app.get('/api/requesters/active', async (_req: Request, res: Response) => {
   try {
-    const activeRequesters = await prisma.requesterUser.findMany({
-      where: { isActive: true },
+    const activeRequesters = await prisma.user.findMany({
+      where: { role: 'REQUESTER', isActive: true },
       orderBy: { id: 'asc' },
     })
     res.status(200).json(activeRequesters)
@@ -85,7 +99,7 @@ app.get('/api/requesters/active', async (_req: Request, res: Response) => {
 // 2. Ticket Endpoints
 // ----------------------------------------------------
 
-// POST /api/tickets - สร้าง Ticket ใหม่ (FR-02, BR-01, BR-02)
+// POST /api/tickets - สร้าง Ticket ใหม่
 app.post('/api/tickets', async (req: Request, res: Response) => {
   try {
     const { requesterId, summary, description, categoryId, relatedSystemId, requestedPriority } = req.body
@@ -108,8 +122,8 @@ app.post('/api/tickets', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Invalid requested priority. Must be LOW, MEDIUM, HIGH, or URGENT.' })
     }
 
-    // ตรวจสอบว่า Requester มีอยู่จริงและ Active (BR-04)
-    const requester = await prisma.requesterUser.findUnique({
+    // ตรวจสอบว่า Requester มีอยู่จริงและ Active
+    const requester = await prisma.user.findUnique({
       where: { id: Number(requesterId) },
     })
     if (!requester || !requester.isActive) {
@@ -131,7 +145,7 @@ app.post('/api/tickets', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Related system not found.' })
     }
 
-    // 2. บันทึกและสร้างเลข Ticket Number ด้วย Transaction (BR-01, BR-02)
+    // 2. บันทึกและสร้างเลข Ticket Number ด้วย Transaction
     const newTicket = await prisma.$transaction(async (tx) => {
       const ticket = await tx.ticket.create({
         data: {
@@ -142,7 +156,7 @@ app.post('/api/tickets', async (req: Request, res: Response) => {
           relatedSystemId: Number(relatedSystemId),
           requestedPriority: (requestedPriority === 'URGENT' ? 'HIGH' : requestedPriority) as Priority,
           itPriority: (requestedPriority === 'URGENT' ? 'HIGH' : requestedPriority) as Priority,
-          currentStatus: TicketStatus.NEW, // BR-02: สถานะเริ่มต้น NEW
+          currentStatus: TicketStatus.NEW,
           ticketNo: `PENDING-${Date.now()}`,
         },
       })
@@ -174,7 +188,7 @@ app.post('/api/tickets', async (req: Request, res: Response) => {
   }
 })
 
-// GET /api/tickets - ดึงรายการ Tickets ของ Requester พร้อม Search, Filter, Sort, Pagination (FR-04, FR-05, FR-09)
+// GET /api/tickets - ดึงรายการ Tickets ของ Requester
 app.get('/api/tickets', async (req: Request, res: Response) => {
   try {
     const requesterIdHeader = req.headers['x-requester-id']
@@ -200,7 +214,7 @@ app.get('/api/tickets', async (req: Request, res: Response) => {
     const skip = (pageNum - 1) * take
 
     const where: any = {
-      requesterId, // FR-09: Isolation - กรองเฉพาะตั๋วของผู้ใช้ที่ระบุ
+      requesterId,
     }
 
     if (search && typeof search === 'string' && search.trim() !== '') {
@@ -269,7 +283,7 @@ app.get('/api/tickets', async (req: Request, res: Response) => {
   }
 })
 
-// GET /api/tickets/:id - ดูรายละเอียด Ticket (FR-06, FR-09)
+// GET /api/tickets/:id - ดูรายละเอียด Ticket
 app.get('/api/tickets/:id', async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id)
@@ -294,7 +308,6 @@ app.get('/api/tickets/:id', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Ticket not found' })
     }
 
-    // FR-09 / AC-03: Cross-requester data isolation
     if (requesterId && ticket.requesterId !== requesterId) {
       return res.status(403).json({ error: 'Forbidden: You do not have permission to view this ticket.' })
     }
@@ -311,7 +324,7 @@ app.get('/api/tickets/:id', async (req: Request, res: Response) => {
 })
 
 // ----------------------------------------------------
-// 3. Attachment Endpoints (FR-07, FR-08, BR-05, BR-06, BR-07)
+// 3. Attachment Endpoints
 // ----------------------------------------------------
 
 // POST /api/tickets/:id/attachments - อัปโหลดไฟล์แนบ
@@ -343,18 +356,15 @@ app.post('/api/tickets/:id/attachments', async (req: Request, res: Response) => 
       return res.status(403).json({ error: 'Forbidden: Cannot add attachment to another requester ticket.' })
     }
 
-    // BR-06: Maximum 5 active attachments per ticket
     if (ticket.attachments.length >= 5) {
       return res.status(400).json({ error: 'Maximum 5 active attachments allowed per ticket.' })
     }
 
-    // BR-05: Allowed attachment file types (JPG, PNG, WEBP, PDF)
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf']
     if (!fileType || !allowedTypes.includes(fileType)) {
       return res.status(400).json({ error: 'Invalid file type. Allowed formats: JPG, PNG, WEBP, PDF.' })
     }
 
-    // BR-05: Maximum size is 5 MB
     const maxSize = 5 * 1024 * 1024
     if (!fileSize || Number(fileSize) > maxSize) {
       return res.status(400).json({ error: 'File size exceeds 5 MB limit.' })
@@ -377,7 +387,7 @@ app.post('/api/tickets/:id/attachments', async (req: Request, res: Response) => 
   }
 })
 
-// DELETE /api/attachments/:id - Soft-remove attachment with mandatory reason (FR-08, BR-07)
+// DELETE /api/attachments/:id - Soft-remove attachment
 app.delete('/api/attachments/:id', async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id)

@@ -4,6 +4,7 @@ import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import { PrismaClient, Priority, TicketStatus } from '@prisma/client'
 import authRoutes from './routes/auth.routes'
+import { authenticate, AuthRequest } from './middlewares/auth.middleware'
 
 const app = express()
 const prisma = new PrismaClient()
@@ -67,7 +68,7 @@ app.get('/api/related-systems', async (_req: Request, res: Response) => {
   }
 })
 
-// GET /api/requesters - ดึงรายชื่อ Requester ทั้งหมดสำหรับ Persona Switcher
+// GET /api/requesters - ดึงรายชื่อ Requester ทั้งหมด
 app.get('/api/requesters', async (_req: Request, res: Response) => {
   try {
     const requesters = await prisma.user.findMany({
@@ -96,16 +97,17 @@ app.get('/api/requesters/active', async (_req: Request, res: Response) => {
 })
 
 // ----------------------------------------------------
-// 2. Ticket Endpoints
+// 2. Ticket Endpoints (Guarded by Authenticate & RBAC)
 // ----------------------------------------------------
 
-// POST /api/tickets - สร้าง Ticket ใหม่
-app.post('/api/tickets', async (req: Request, res: Response) => {
+// POST /api/tickets - สร้าง Ticket ใหม่ (ใช้ authenticated user identity เสมอ)
+app.post('/api/tickets', authenticate, async (req: AuthRequest, res: Response) => {
   try {
-    const { requesterId, summary, description, categoryId, relatedSystemId, requestedPriority } = req.body
+    const { summary, description, categoryId, relatedSystemId, requestedPriority } = req.body
+    const requesterId = req.user!.id
 
     // 1. ตรวจสอบข้อมูลจำเป็น (Backend Validation)
-    if (!requesterId || !summary || !description || !categoryId || !relatedSystemId || !requestedPriority) {
+    if (!summary || !description || !categoryId || !relatedSystemId) {
       return res.status(400).json({ error: 'All required fields must be provided.' })
     }
 
@@ -117,45 +119,47 @@ app.post('/api/tickets', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Description is required.' })
     }
 
+    const priorityValue = requestedPriority || 'MEDIUM'
     const validPriorities = ['LOW', 'MEDIUM', 'HIGH', 'URGENT']
-    if (!validPriorities.includes(requestedPriority)) {
+    if (!validPriorities.includes(priorityValue)) {
       return res.status(400).json({ error: 'Invalid requested priority. Must be LOW, MEDIUM, HIGH, or URGENT.' })
     }
 
-    // ตรวจสอบว่า Requester มีอยู่จริงและ Active
-    const requester = await prisma.user.findUnique({
-      where: { id: Number(requesterId) },
-    })
-    if (!requester || !requester.isActive) {
-      return res.status(400).json({ error: 'Requester user not found or inactive.' })
+    // ตรวจสอบ Category & RelatedSystem
+    const parsedCategoryId = parseInt(categoryId, 10)
+    const parsedRelatedSystemId = parseInt(relatedSystemId, 10)
+
+    if (isNaN(parsedCategoryId) || isNaN(parsedRelatedSystemId)) {
+      return res.status(400).json({ error: 'Invalid categoryId or relatedSystemId.' })
     }
 
-    // ตรวจสอบ Category & RelatedSystem
     const category = await prisma.category.findUnique({
-      where: { id: Number(categoryId) },
+      where: { id: parsedCategoryId },
     })
     if (!category) {
       return res.status(400).json({ error: 'Category not found.' })
     }
 
     const relatedSystem = await prisma.relatedSystem.findUnique({
-      where: { id: Number(relatedSystemId) },
+      where: { id: parsedRelatedSystemId },
     })
     if (!relatedSystem) {
       return res.status(400).json({ error: 'Related system not found.' })
     }
 
+    const mappedPriority = (priorityValue === 'URGENT' ? 'HIGH' : priorityValue) as Priority
+
     // 2. บันทึกและสร้างเลข Ticket Number ด้วย Transaction
     const newTicket = await prisma.$transaction(async (tx) => {
       const ticket = await tx.ticket.create({
         data: {
-          requesterId: Number(requesterId),
+          requesterId,
           summary: summary.trim(),
           description: description.trim(),
-          categoryId: Number(categoryId),
-          relatedSystemId: Number(relatedSystemId),
-          requestedPriority: (requestedPriority === 'URGENT' ? 'HIGH' : requestedPriority) as Priority,
-          itPriority: (requestedPriority === 'URGENT' ? 'HIGH' : requestedPriority) as Priority,
+          categoryId: parsedCategoryId,
+          relatedSystemId: parsedRelatedSystemId,
+          requestedPriority: mappedPriority,
+          itPriority: mappedPriority,
           currentStatus: TicketStatus.NEW,
           ticketNo: `PENDING-${Date.now()}`,
         },
@@ -169,7 +173,9 @@ app.post('/api/tickets', async (req: Request, res: Response) => {
         include: {
           category: true,
           relatedSystem: true,
-          requester: true,
+          requester: {
+            select: { id: true, name: true, email: true, role: true },
+          },
           attachments: true,
         },
       })
@@ -188,15 +194,10 @@ app.post('/api/tickets', async (req: Request, res: Response) => {
   }
 })
 
-// GET /api/tickets - ดึงรายการ Tickets ของ Requester
-app.get('/api/tickets', async (req: Request, res: Response) => {
+// GET /api/tickets - ดึงรายการ Tickets (Requester ได้เฉพาะของตัวเอง, Staff/Admin ได้ทั้งหมด)
+app.get('/api/tickets', authenticate, async (req: AuthRequest, res: Response) => {
   try {
-    const requesterIdHeader = req.headers['x-requester-id']
-    const requesterId = requesterIdHeader ? Number(requesterIdHeader) : Number(req.query.requesterId)
-
-    if (!requesterId || isNaN(requesterId)) {
-      return res.status(400).json({ error: 'Requester ID is required (x-requester-id header or requesterId query param).' })
-    }
+    const isRequester = req.user!.role === 'REQUESTER'
 
     const {
       search,
@@ -213,9 +214,8 @@ app.get('/api/tickets', async (req: Request, res: Response) => {
     const take = Math.max(1, parseInt(limit as string, 10) || 5)
     const skip = (pageNum - 1) * take
 
-    const where: any = {
-      requesterId,
-    }
+    // BR-03: ถ้าเป็น REQUESTER จะถูกกรองเฉพาะ requesterId ของตัวเองเสมอ
+    const where: any = isRequester ? { requesterId: req.user!.id } : {}
 
     if (search && typeof search === 'string' && search.trim() !== '') {
       const q = search.trim()
@@ -251,7 +251,9 @@ app.get('/api/tickets', async (req: Request, res: Response) => {
         include: {
           category: true,
           relatedSystem: true,
-          requester: true,
+          requester: {
+            select: { id: true, name: true, email: true, role: true },
+          },
           attachments: {
             where: { isDeleted: false },
           },
@@ -283,23 +285,22 @@ app.get('/api/tickets', async (req: Request, res: Response) => {
   }
 })
 
-// GET /api/tickets/:id - ดูรายละเอียด Ticket
-app.get('/api/tickets/:id', async (req: Request, res: Response) => {
+// GET /api/tickets/:id - ดูรายละเอียด Ticket (AC-03: ตรวจสอบความเป็นเจ้าของสำหรับ Requester)
+app.get('/api/tickets/:id', authenticate, async (req: AuthRequest, res: Response) => {
   try {
-    const id = Number(req.params.id)
+    const id = parseInt(req.params.id as string, 10)
     if (isNaN(id)) {
       return res.status(400).json({ error: 'Invalid ticket ID.' })
     }
-
-    const requesterIdHeader = req.headers['x-requester-id']
-    const requesterId = requesterIdHeader ? Number(requesterIdHeader) : Number(req.query.requesterId)
 
     const ticket = await prisma.ticket.findUnique({
       where: { id },
       include: {
         category: true,
         relatedSystem: true,
-        requester: true,
+        requester: {
+          select: { id: true, name: true, email: true, role: true },
+        },
         attachments: true,
       },
     })
@@ -308,8 +309,9 @@ app.get('/api/tickets/:id', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Ticket not found' })
     }
 
-    if (requesterId && ticket.requesterId !== requesterId) {
-      return res.status(403).json({ error: 'Forbidden: You do not have permission to view this ticket.' })
+    // Ownership Check: ถ้าเป็น Requester และไม่ใช่เจ้าของตั๋ว ให้ตอบกลับ 403 Forbidden (AC-03)
+    if (req.user!.role === 'REQUESTER' && ticket.requesterId !== req.user!.id) {
+      return res.status(403).json({ error: 'Access forbidden: not the ticket owner' })
     }
 
     return res.status(200).json({
@@ -324,19 +326,17 @@ app.get('/api/tickets/:id', async (req: Request, res: Response) => {
 })
 
 // ----------------------------------------------------
-// 3. Attachment Endpoints
+// 3. Attachment Endpoints (Guarded by Authenticate & Ownership)
 // ----------------------------------------------------
 
 // POST /api/tickets/:id/attachments - อัปโหลดไฟล์แนบ
-app.post('/api/tickets/:id/attachments', async (req: Request, res: Response) => {
+app.post('/api/tickets/:id/attachments', authenticate, async (req: AuthRequest, res: Response) => {
   try {
-    const ticketId = Number(req.params.id)
+    const ticketId = parseInt(req.params.id as string, 10)
     if (isNaN(ticketId)) {
       return res.status(400).json({ error: 'Invalid ticket ID.' })
     }
 
-    const requesterIdHeader = req.headers['x-requester-id']
-    const requesterId = requesterIdHeader ? Number(requesterIdHeader) : Number(req.body.requesterId)
     const { fileName, fileSize, fileType, filePath } = req.body
 
     const ticket = await prisma.ticket.findUnique({
@@ -352,7 +352,8 @@ app.post('/api/tickets/:id/attachments', async (req: Request, res: Response) => 
       return res.status(404).json({ error: 'Ticket not found' })
     }
 
-    if (requesterId && ticket.requesterId !== requesterId) {
+    // Ownership Check for Requester
+    if (req.user!.role === 'REQUESTER' && ticket.requesterId !== req.user!.id) {
       return res.status(403).json({ error: 'Forbidden: Cannot add attachment to another requester ticket.' })
     }
 
@@ -388,15 +389,13 @@ app.post('/api/tickets/:id/attachments', async (req: Request, res: Response) => 
 })
 
 // DELETE /api/attachments/:id - Soft-remove attachment
-app.delete('/api/attachments/:id', async (req: Request, res: Response) => {
+app.delete('/api/attachments/:id', authenticate, async (req: AuthRequest, res: Response) => {
   try {
-    const id = Number(req.params.id)
+    const id = parseInt(req.params.id as string, 10)
     if (isNaN(id)) {
       return res.status(400).json({ error: 'Invalid attachment ID.' })
     }
 
-    const requesterIdHeader = req.headers['x-requester-id']
-    const requesterId = requesterIdHeader ? Number(requesterIdHeader) : Number(req.body.requesterId)
     const { deletedReason } = req.body
 
     if (!deletedReason || typeof deletedReason !== 'string' || deletedReason.trim().length === 0) {
@@ -412,7 +411,8 @@ app.delete('/api/attachments/:id', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Attachment not found' })
     }
 
-    if (requesterId && attachment.ticket.requesterId !== requesterId) {
+    // Ownership Check for Requester
+    if (req.user!.role === 'REQUESTER' && attachment.ticket.requesterId !== req.user!.id) {
       return res.status(403).json({ error: 'Forbidden: Cannot remove attachment from another requester ticket.' })
     }
 

@@ -61,9 +61,7 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
 
     try {
       const res = await fetch(`/api/tickets/${ticketId}`, {
-        headers: {
-          'x-requester-id': String(currentRequester?.id || ''),
-        },
+        credentials: 'include',
       })
 
       if (res.status === 403) {
@@ -124,10 +122,9 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-requester-id': String(currentRequester?.id || ''),
         },
+        credentials: 'include',
         body: JSON.stringify({
-          requesterId: currentRequester?.id,
           fileName: file.name,
           fileSize: file.size,
           fileType: file.type,
@@ -164,10 +161,9 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          'x-requester-id': String(currentRequester?.id || ''),
         },
+        credentials: 'include',
         body: JSON.stringify({
-          requesterId: currentRequester?.id,
           deletedReason: deleteReason.trim(),
         }),
       })

@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import './App.css'
-import { RequesterProvider, useRequester } from './context/RequesterContext'
-import { DevRequesterSwitcher } from './components/DevRequesterSwitcher'
+import { AuthProvider, useAuth } from './context/AuthContext'
+import { Login } from './pages/Login'
+import { ChangePassword } from './pages/ChangePassword'
 import { CreateTicket } from './components/CreateTicket'
 import { MyTickets } from './components/MyTickets'
 import { TicketDetail } from './components/TicketDetail'
+import { BrowserRouter } from 'react-router-dom'
 
 interface Category {
   id: number
@@ -12,31 +14,42 @@ interface Category {
 }
 
 function MainContent() {
+  const { user, loading, logout } = useAuth()
   const [activeTab, setActiveTab] = useState<'list' | 'create' | 'system' | 'detail'>('list')
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null)
   const [status, setStatus] = useState<string>('Unknown')
   const [categories, setCategories] = useState<Category[]>([])
-  const [loading, setLoading] = useState<boolean>(false)
+  const [systemLoading, setSystemLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
 
-  // ดึง active persona มาแสดงผลในหน้านี้
-  const { currentRequester } = useRequester()
+  if (loading) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#F5F7F6' }}>
+        <p style={{ color: '#006B3C', fontWeight: 600 }}>Loading TokTickIT session...</p>
+      </div>
+    )
+  }
 
-  // ฟังก์ชันเปิดหน้ารายละเอียดตั๋ว (Issue 6)
+  if (!user) {
+    return <Login />
+  }
+
+  if (user.mustChangePassword) {
+    return <ChangePassword />
+  }
+
   const handleSelectTicket = (ticketId: number) => {
     setSelectedTicketId(ticketId)
     setActiveTab('detail')
   }
 
   const handleCheckSystem = async () => {
-    setLoading(true)
+    setSystemLoading(true)
     setError(null)
     try {
-      // 1. ตรวจสอบสถานะ Health Endpoint ผ่าน /api/health
       const healthRes = await fetch('/api/health')
       if (!healthRes.ok) throw new Error('Health check failed')
 
-      // 2. ดึงข้อมูล Categories ผ่าน /api/categories
       const catRes = await fetch('/api/categories')
       if (!catRes.ok) throw new Error('Categories fetch failed')
       const catData: Category[] = await catRes.json()
@@ -47,7 +60,7 @@ function MainContent() {
       setStatus('Offline')
       setError('Unable to connect to TokTickIT API')
     } finally {
-      setLoading(false)
+      setSystemLoading(false)
     }
   }
 
@@ -60,7 +73,7 @@ function MainContent() {
         flexDirection: 'column',
       }}
     >
-      {/* Top Navbar with Dev Persona Switcher & Tab Navigation */}
+      {/* Top Navbar with Authenticated User Details & Logout */}
       <header className="app-header">
         <div className="header-left">
           <div className="header-brand">
@@ -78,7 +91,7 @@ function MainContent() {
                 border: '1px solid rgba(255, 255, 255, 0.3)',
               }}
             >
-              Sprint 2
+              Sprint 3
             </span>
           </div>
 
@@ -105,26 +118,49 @@ function MainContent() {
           </nav>
         </div>
 
-        <DevRequesterSwitcher />
+        {/* Authenticated User Status & Logout Action */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', color: '#FFFFFF' }}>
+            <span style={{ fontSize: '0.88rem', fontWeight: 600 }}>{user.name}</span>
+            <span style={{ fontSize: '0.72rem', opacity: 0.85 }}>
+              {user.email} • <span style={{ textTransform: 'capitalize', fontWeight: 700 }}>{user.role.toLowerCase()}</span>
+            </span>
+          </div>
+          <button
+            onClick={() => logout()}
+            style={{
+              backgroundColor: 'rgba(255, 255, 255, 0.15)',
+              color: '#FFFFFF',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              padding: '0.35rem 0.75rem',
+              borderRadius: '0.375rem',
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            Logout
+          </button>
+        </div>
       </header>
 
       {/* Main View Area */}
       {activeTab === 'list' ? (
         <MyTickets
-          currentRequester={currentRequester}
+          currentRequester={user}
           onSelectTicket={handleSelectTicket}
           onCreateNew={() => setActiveTab('create')}
         />
       ) : activeTab === 'create' ? (
         <CreateTicket
-          currentRequester={currentRequester}
+          currentRequester={user}
           onCancel={() => setActiveTab('list')}
           onSuccess={() => setActiveTab('list')}
         />
       ) : activeTab === 'detail' && selectedTicketId ? (
         <TicketDetail
           ticketId={selectedTicketId}
-          currentRequester={currentRequester}
+          currentRequester={user}
           onBack={() => setActiveTab('list')}
         />
       ) : (
@@ -174,24 +210,22 @@ function MainContent() {
               TokTickIT
             </h1>
 
-            {/* Persona Card */}
-            {currentRequester && (
-              <div
-                style={{
-                  backgroundColor: '#f8fafc',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '0.5rem',
-                  padding: '0.6rem 0.8rem',
-                  marginBottom: '1.25rem',
-                  fontSize: '0.85rem',
-                  color: '#334155',
-                  textAlign: 'left',
-                }}
-              >
-                <span style={{ fontWeight: 600, color: '#0f172a' }}>Logged in as: </span>
-                {currentRequester.name} ({currentRequester.email})
-              </div>
-            )}
+            {/* Authenticated User Banner */}
+            <div
+              style={{
+                backgroundColor: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderRadius: '0.5rem',
+                padding: '0.6rem 0.8rem',
+                marginBottom: '1.25rem',
+                fontSize: '0.85rem',
+                color: '#334155',
+                textAlign: 'left',
+              }}
+            >
+              <span style={{ fontWeight: 600, color: '#0f172a' }}>Logged in as: </span>
+              {user.name} ({user.email})
+            </div>
 
             <p
               style={{
@@ -206,26 +240,25 @@ function MainContent() {
 
             <button
               onClick={handleCheckSystem}
-              disabled={loading}
+              disabled={systemLoading}
               style={{
                 width: '100%',
-                backgroundColor: '#0066ff',
+                backgroundColor: '#006B3C',
                 color: '#ffffff',
                 border: 'none',
                 borderRadius: '0.75rem',
                 padding: '0.9rem 1.25rem',
                 fontSize: '1.05rem',
                 fontWeight: 600,
-                cursor: loading ? 'not-allowed' : 'pointer',
+                cursor: systemLoading ? 'not-allowed' : 'pointer',
                 transition: 'background-color 0.2s ease',
-                boxShadow: '0 4px 6px -1px rgba(0, 102, 255, 0.2)',
                 display: 'block',
               }}
             >
-              {loading ? 'Checking...' : 'Check System'}
+              {systemLoading ? 'Checking...' : 'Check System'}
             </button>
 
-            {loading && (
+            {systemLoading && (
               <p style={{ marginTop: '1.25rem', color: '#64748b', fontSize: '0.9rem' }}>
                 Loading categories...
               </p>
@@ -265,7 +298,7 @@ function MainContent() {
               </p>
             )}
 
-            {!loading && !error && categories.length > 0 && (
+            {!systemLoading && !error && categories.length > 0 && (
               <div style={{ marginTop: '1.75rem', textAlign: 'left' }}>
                 <h3
                   style={{
@@ -296,7 +329,7 @@ function MainContent() {
                         gap: '0.5rem',
                       }}
                     >
-                      <span style={{ color: '#0066ff', fontSize: '0.8rem' }}>▸</span> {cat.name}
+                      <span style={{ color: '#006B3C', fontSize: '0.8rem' }}>▸</span> {cat.name}
                     </li>
                   ))}
                 </ul>
@@ -311,9 +344,11 @@ function MainContent() {
 
 function App() {
   return (
-    <RequesterProvider>
-      <MainContent />
-    </RequesterProvider>
+    <BrowserRouter>
+      <AuthProvider>
+        <MainContent />
+      </AuthProvider>
+    </BrowserRouter>
   )
 }
 

@@ -2,17 +2,37 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import request from 'supertest'
 import app from '../../src/index'
 import { PrismaClient } from '@prisma/client'
+import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
 
-describe('Lab 2: Attachments API Tests (FR-07, FR-08, BR-05, BR-06, BR-07 / AC-04, AC-05)', () => {
+describe('Lab 2: Attachments API Tests (Authenticated Regression / FR-07, FR-08, BR-05, BR-06, BR-07 / AC-04, AC-05)', () => {
   let userId: number
+  let userCookie: string
   let ticketId: number
   let createdAttachmentId: number
 
   beforeAll(async () => {
-    const user = await prisma.user.findFirst({ where: { role: 'REQUESTER', isActive: true } })
-    userId = user ? user.id : 1
+    const defaultHash = await bcrypt.hash('Password123!', 10)
+
+    const user = await prisma.user.upsert({
+      where: { email: 'jennifer.anderson@tiktockit.com' },
+      update: { passwordHash: defaultHash, isActive: true },
+      create: {
+        email: 'jennifer.anderson@tiktockit.com',
+        name: 'Jennifer Anderson',
+        passwordHash: defaultHash,
+        role: 'REQUESTER',
+        isActive: true,
+      },
+    })
+    userId = user.id
+
+    const login = await request(app)
+      .post('/api/auth/login')
+      .send({ email: 'jennifer.anderson@tiktockit.com', password: 'Password123!' })
+    const cookies = login.headers['set-cookie']
+    userCookie = Array.isArray(cookies) ? cookies[0] : cookies || ''
 
     const cat = await prisma.category.findFirst()
     const sys = await prisma.relatedSystem.findFirst()
@@ -35,9 +55,8 @@ describe('Lab 2: Attachments API Tests (FR-07, FR-08, BR-05, BR-06, BR-07 / AC-0
   it('API-04a: Successfully uploads permitted attachment (JPG/PNG/WEBP/PDF <= 5MB)', async () => {
     const res = await request(app)
       .post(`/api/tickets/${ticketId}/attachments`)
-      .set('x-requester-id', String(userId))
+      .set('Cookie', userCookie)
       .send({
-        requesterId: userId,
         fileName: 'error-screenshot.png',
         fileSize: 102400, // 100 KB
         fileType: 'image/png',
@@ -54,9 +73,8 @@ describe('Lab 2: Attachments API Tests (FR-07, FR-08, BR-05, BR-06, BR-07 / AC-0
   it('API-04b / AC-04: Rejects attachment with invalid file type (e.g. .exe / .zip)', async () => {
     const res = await request(app)
       .post(`/api/tickets/${ticketId}/attachments`)
-      .set('x-requester-id', String(userId))
+      .set('Cookie', userCookie)
       .send({
-        requesterId: userId,
         fileName: 'malware.exe',
         fileSize: 50000,
         fileType: 'application/x-msdownload',
@@ -69,9 +87,8 @@ describe('Lab 2: Attachments API Tests (FR-07, FR-08, BR-05, BR-06, BR-07 / AC-0
   it('API-04c / AC-04: Rejects attachment exceeding 5 MB limit', async () => {
     const res = await request(app)
       .post(`/api/tickets/${ticketId}/attachments`)
-      .set('x-requester-id', String(userId))
+      .set('Cookie', userCookie)
       .send({
-        requesterId: userId,
         fileName: 'huge-file.pdf',
         fileSize: 6 * 1024 * 1024, // 6 MB
         fileType: 'application/pdf',
@@ -84,9 +101,8 @@ describe('Lab 2: Attachments API Tests (FR-07, FR-08, BR-05, BR-06, BR-07 / AC-0
   it('API-05a / AC-05: Soft-removes an attachment with mandatory reason (BR-07)', async () => {
     const res = await request(app)
       .delete(`/api/attachments/${createdAttachmentId}`)
-      .set('x-requester-id', String(userId))
+      .set('Cookie', userCookie)
       .send({
-        requesterId: userId,
         deletedReason: 'Uploaded wrong document screenshot',
       })
 
@@ -110,9 +126,8 @@ describe('Lab 2: Attachments API Tests (FR-07, FR-08, BR-05, BR-06, BR-07 / AC-0
 
     const res = await request(app)
       .delete(`/api/attachments/${tempAtt.id}`)
-      .set('x-requester-id', String(userId))
+      .set('Cookie', userCookie)
       .send({
-        requesterId: userId,
         deletedReason: '', // Empty reason
       })
 

@@ -4,6 +4,7 @@ import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import { PrismaClient, Priority, TicketStatus } from '@prisma/client'
 import authRoutes from './routes/auth.routes'
+import staffRoutes from './routes/staff.routes'
 import { authenticate, AuthRequest } from './middlewares/auth.middleware'
 
 const app = express()
@@ -20,8 +21,9 @@ app.use(
 app.use(express.json())
 app.use(cookieParser())
 
-// เชื่อมต่อ Auth Routes สำหรับ Sprint 3
+// เชื่อมต่อ Auth Routes และ Staff Routes สำหรับ Sprint 3
 app.use('/api/auth', authRoutes)
+app.use('/api/staff', staffRoutes)
 
 // ฟังก์ชันสร้าง Ticket Number แบบเป็นทางการ (BR-01) เช่น TKT-2026-000001
 function generateTicketNumber(id: number): string {

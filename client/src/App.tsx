@@ -1,42 +1,28 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import './App.css'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { Login } from './pages/Login'
 import { ChangePassword } from './pages/ChangePassword'
+import { StaffTicketQueue } from './pages/StaffTicketQueue'
 import { CreateTicket } from './components/CreateTicket'
 import { MyTickets } from './components/MyTickets'
 import { TicketDetail } from './components/TicketDetail'
-import { BrowserRouter } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 
 interface Category {
   id: number
   name: string
 }
 
-function MainContent() {
-  const { user, loading, logout } = useAuth()
+function RequesterPortal() {
+  const { user, logout } = useAuth()
   const [activeTab, setActiveTab] = useState<'list' | 'create' | 'system' | 'detail'>('list')
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null)
   const [status, setStatus] = useState<string>('Unknown')
   const [categories, setCategories] = useState<Category[]>([])
   const [systemLoading, setSystemLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
-
-  if (loading) {
-    return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#F5F7F6' }}>
-        <p style={{ color: '#006B3C', fontWeight: 600 }}>Loading TokTickIT session...</p>
-      </div>
-    )
-  }
-
-  if (!user) {
-    return <Login />
-  }
-
-  if (user.mustChangePassword) {
-    return <ChangePassword />
-  }
+  const navigate = useNavigate()
 
   const handleSelectTicket = (ticketId: number) => {
     setSelectedTicketId(ticketId)
@@ -73,7 +59,7 @@ function MainContent() {
         flexDirection: 'column',
       }}
     >
-      {/* Top Navbar with Authenticated User Details & Logout */}
+      {/* Top Navbar */}
       <header className="app-header">
         <div className="header-left">
           <div className="header-brand">
@@ -115,33 +101,44 @@ function MainContent() {
             >
               🔍 System Status
             </button>
+            {(user?.role === 'IT_STAFF' || user?.role === 'ADMINISTRATOR') && (
+              <button
+                onClick={() => navigate('/it/queue')}
+                className="nav-btn"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.25)', fontWeight: 700 }}
+              >
+                📥 IT Queue
+              </button>
+            )}
           </nav>
         </div>
 
-        {/* Authenticated User Status & Logout Action */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', color: '#FFFFFF' }}>
-            <span style={{ fontSize: '0.88rem', fontWeight: 600 }}>{user.name}</span>
-            <span style={{ fontSize: '0.72rem', opacity: 0.85 }}>
-              {user.email} • <span style={{ textTransform: 'capitalize', fontWeight: 700 }}>{user.role.toLowerCase()}</span>
-            </span>
+        {/* Authenticated User Status & Logout */}
+        {user && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', color: '#FFFFFF' }}>
+              <span style={{ fontSize: '0.88rem', fontWeight: 600 }}>{user.name}</span>
+              <span style={{ fontSize: '0.72rem', opacity: 0.85 }}>
+                {user.email} • <span style={{ textTransform: 'capitalize', fontWeight: 700, backgroundColor: 'rgba(255,255,255,0.2)', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>{user.role.toLowerCase()}</span>
+              </span>
+            </div>
+            <button
+              onClick={() => logout()}
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                color: '#FFFFFF',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                padding: '0.35rem 0.75rem',
+                borderRadius: '0.375rem',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              Logout
+            </button>
           </div>
-          <button
-            onClick={() => logout()}
-            style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.15)',
-              color: '#FFFFFF',
-              border: '1px solid rgba(255, 255, 255, 0.3)',
-              padding: '0.35rem 0.75rem',
-              borderRadius: '0.375rem',
-              fontSize: '0.8rem',
-              fontWeight: 600,
-              cursor: 'pointer',
-            }}
-          >
-            Logout
-          </button>
-        </div>
+        )}
       </header>
 
       {/* Main View Area */}
@@ -211,21 +208,23 @@ function MainContent() {
             </h1>
 
             {/* Authenticated User Banner */}
-            <div
-              style={{
-                backgroundColor: '#f8fafc',
-                border: '1px solid #e2e8f0',
-                borderRadius: '0.5rem',
-                padding: '0.6rem 0.8rem',
-                marginBottom: '1.25rem',
-                fontSize: '0.85rem',
-                color: '#334155',
-                textAlign: 'left',
-              }}
-            >
-              <span style={{ fontWeight: 600, color: '#0f172a' }}>Logged in as: </span>
-              {user.name} ({user.email})
-            </div>
+            {user && (
+              <div
+                style={{
+                  backgroundColor: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '0.5rem',
+                  padding: '0.6rem 0.8rem',
+                  marginBottom: '1.25rem',
+                  fontSize: '0.85rem',
+                  color: '#334155',
+                  textAlign: 'left',
+                }}
+              >
+                <span style={{ fontWeight: 600, color: '#0f172a' }}>Logged in as: </span>
+                {user.name} ({user.email})
+              </div>
+            )}
 
             <p
               style={{
@@ -342,11 +341,102 @@ function MainContent() {
   )
 }
 
+function AppRoutes() {
+  const { user, loading } = useAuth()
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#F5F7F6' }}>
+        <p style={{ color: '#006B3C', fontWeight: 600 }}>Loading TokTickIT session...</p>
+      </div>
+    )
+  }
+
+  return (
+    <Routes>
+      <Route
+        path="/login"
+        element={
+          !user ? (
+            <Login />
+          ) : user.mustChangePassword ? (
+            <Navigate to="/change-password" replace />
+          ) : user.role === 'IT_STAFF' || user.role === 'ADMINISTRATOR' ? (
+            <Navigate to="/it/queue" replace />
+          ) : (
+            <Navigate to="/tickets" replace />
+          )
+        }
+      />
+
+      <Route
+        path="/change-password"
+        element={
+          !user ? (
+            <Navigate to="/login" replace />
+          ) : (
+            <ChangePassword />
+          )
+        }
+      />
+
+      {/* IT Staff & Admin Queue Route */}
+      <Route
+        path="/it/queue"
+        element={
+          !user ? (
+            <Navigate to="/login" replace />
+          ) : user.mustChangePassword ? (
+            <Navigate to="/change-password" replace />
+          ) : user.role === 'IT_STAFF' || user.role === 'ADMINISTRATOR' ? (
+            <StaffTicketQueue />
+          ) : (
+            <Navigate to="/tickets" replace />
+          )
+        }
+      />
+
+      {/* Requester Portal Route */}
+      <Route
+        path="/tickets"
+        element={
+          !user ? (
+            <Navigate to="/login" replace />
+          ) : user.mustChangePassword ? (
+            <Navigate to="/change-password" replace />
+          ) : (
+            <RequesterPortal />
+          )
+        }
+      />
+
+      {/* Root Path */}
+      <Route
+        path="/"
+        element={
+          !user ? (
+            <Navigate to="/login" replace />
+          ) : user.mustChangePassword ? (
+            <Navigate to="/change-password" replace />
+          ) : user.role === 'IT_STAFF' || user.role === 'ADMINISTRATOR' ? (
+            <Navigate to="/it/queue" replace />
+          ) : (
+            <Navigate to="/tickets" replace />
+          )
+        }
+      />
+
+      {/* Catch-all */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  )
+}
+
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <MainContent />
+        <AppRoutes />
       </AuthProvider>
     </BrowserRouter>
   )

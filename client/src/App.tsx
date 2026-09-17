@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import { Login } from './pages/Login'
 import { ChangePassword } from './pages/ChangePassword'
 import { StaffTicketQueue } from './pages/StaffTicketQueue'
+import { StaffTicketDetail } from './pages/StaffTicketDetail'
 import { CreateTicket } from './components/CreateTicket'
 import { MyTickets } from './components/MyTickets'
 import { TicketDetail } from './components/TicketDetail'
@@ -390,6 +391,22 @@ function AppRoutes() {
             <Navigate to="/change-password" replace />
           ) : user.role === 'IT_STAFF' || user.role === 'ADMINISTRATOR' ? (
             <StaffTicketQueue />
+          ) : (
+            <Navigate to="/tickets" replace />
+          )
+        }
+      />
+
+      {/* IT Staff Ticket Detail Route */}
+      <Route
+        path="/it/tickets/:id"
+        element={
+          !user ? (
+            <Navigate to="/login" replace />
+          ) : user.mustChangePassword ? (
+            <Navigate to="/change-password" replace />
+          ) : user.role === 'IT_STAFF' || user.role === 'ADMINISTRATOR' ? (
+            <StaffTicketDetail />
           ) : (
             <Navigate to="/tickets" replace />
           )

@@ -24,6 +24,7 @@ app.use(cookieParser())
 // เชื่อมต่อ Auth Routes และ Staff Routes สำหรับ Sprint 3
 app.use('/api/auth', authRoutes)
 app.use('/api/staff', staffRoutes)
+app.use('/', staffRoutes)
 
 // ฟังก์ชันสร้าง Ticket Number แบบเป็นทางการ (BR-01) เช่น TKT-2026-000001
 function generateTicketNumber(id: number): string {

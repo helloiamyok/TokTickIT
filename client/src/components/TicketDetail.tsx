@@ -10,6 +10,18 @@ interface Attachment {
   isDeleted: boolean
 }
 
+interface CommentItem {
+  id: number
+  content: string
+  isInternal: boolean
+  createdAt: string
+  author: {
+    id: number | string
+    name: string
+    role: string
+  }
+}
+
 interface TicketDetailData {
   id: number
   ticketNumber?: string
@@ -19,6 +31,7 @@ interface TicketDetailData {
   status?: string
   currentStatus?: string
   requestedPriority: string
+  requesterResolutionIndicated?: boolean
   createdAt: string
   updatedAt: string
   requesterId: number
@@ -40,6 +53,9 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
   onBack,
 }) => {
   const [ticket, setTicket] = useState<TicketDetailData | null>(null)
+  const [comments, setComments] = useState<CommentItem[]>([])
+  const [newComment, setNewComment] = useState('')
+  const [isPostingComment, setIsPostingComment] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isForbidden, setIsForbidden] = useState(false)
@@ -75,6 +91,15 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
 
       const data = await res.json()
       setTicket(data)
+
+      // Fetch public comments
+      const commentsRes = await fetch(`/api/tickets/${ticketId}/comments`, {
+        credentials: 'include',
+      })
+      if (commentsRes.ok) {
+        const commentsData = await commentsRes.json()
+        setComments(commentsData.data || [])
+      }
     } catch (err: any) {
       setErrorMessage(err.message || 'An error occurred')
     } finally {
@@ -86,13 +111,54 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
     fetchTicketDetail()
   }, [ticketId, currentRequester])
 
+  // Handle Requester Indicate Resolved (BR-05)
+  const handleIndicateResolved = async () => {
+    try {
+      const res = await fetch(`/api/tickets/${ticketId}/indicate-resolved`, {
+        method: 'PATCH',
+        credentials: 'include',
+      })
+      if (res.ok) {
+        setTicket((prev) => (prev ? { ...prev, requesterResolutionIndicated: true } : null))
+      }
+    } catch (err) {
+      console.error('Failed to indicate resolved', err)
+    }
+  }
+
+  // Handle Post Public Comment
+  const handlePostComment = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newComment.trim()) return
+
+    try {
+      setIsPostingComment(true)
+      const res = await fetch(`/api/tickets/${ticketId}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ content: newComment.trim() }),
+      })
+
+      if (res.ok) {
+        const created = await res.json()
+        setComments((prev) => [...prev, created])
+        setNewComment('')
+      }
+    } catch (err) {
+      console.error('Failed to post comment', err)
+    } finally {
+      setIsPostingComment(false)
+    }
+  }
+
   // Handle File Upload (BR-05, BR-06)
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setUploadError(null)
     const file = e.target.files?.[0]
     if (!file) return
 
-    // BR-05: Allowed formats
+    // Allowed formats
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf']
     if (!allowedTypes.includes(file.type)) {
       setUploadError('Invalid file type. Allowed formats: JPG, PNG, WEBP, PDF.')
@@ -100,7 +166,7 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
       return
     }
 
-    // BR-05: Max 5 MB
+    // Max 5 MB
     const maxSizeBytes = 5 * 1024 * 1024
     if (file.size > maxSizeBytes) {
       setUploadError('File size exceeds the 5 MB limit.')
@@ -108,7 +174,7 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
       return
     }
 
-    // BR-06: Max 5 active attachments
+    // Max 5 active attachments
     const activeAttachments = ticket?.attachments?.filter((a) => !a.isDeleted) || []
     if (activeAttachments.length >= 5) {
       setUploadError('Maximum limit of 5 attachments reached for this ticket.')
@@ -193,11 +259,16 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
     switch (statusName) {
       case 'NEW':
         return { bg: '#EAF6EF', text: '#006B3C', border: '#A7F3D0' }
+      case 'OPEN':
+        return { bg: '#FEF3C7', text: '#92400E', border: '#FDE68A' }
       case 'IN_PROGRESS':
         return { bg: '#EFF6FF', text: '#1D4ED8', border: '#BFDBFE' }
+      case 'WAITING_FOR_REQUESTER':
+        return { bg: '#FFF7ED', text: '#C2410C', border: '#FFEDD5' }
       case 'RESOLVED':
+        return { bg: '#F0FDF4', text: '#15803D', border: '#BBF7D0' }
       case 'CLOSED':
-        return { bg: '#F3F4F6', text: '#374151', border: '#E5E7EB' }
+        return { bg: '#F3F4F6', text: '#4B5563', border: '#E5E7EB' }
       default:
         return { bg: '#FEF3C7', text: '#92400E', border: '#FDE68A' }
     }
@@ -297,13 +368,49 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
                 {ticketNo}: {ticket.summary}
               </h1>
             </div>
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
               <span style={{ padding: '0.3rem 0.75rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600, backgroundColor: statusBadge.bg, color: statusBadge.text, border: `1px solid ${statusBadge.border}` }}>
                 {currentStatus}
               </span>
               <span style={{ padding: '0.3rem 0.75rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600, backgroundColor: priorityBadge.bg, color: priorityBadge.text }}>
                 {ticket.requestedPriority}
               </span>
+
+              {/* Problem Appears Resolved Indicator / Button (BR-05) */}
+              {ticket.requesterResolutionIndicated ? (
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    padding: '0.3rem 0.75rem',
+                    backgroundColor: '#ECFDF5',
+                    color: '#065F46',
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    borderRadius: '20px',
+                    border: '1px solid #A7F3D0',
+                  }}
+                >
+                  ✓ Problem Indicated as Resolved
+                </span>
+              ) : (
+                <button
+                  onClick={handleIndicateResolved}
+                  style={{
+                    padding: '0.35rem 0.85rem',
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    borderRadius: '6px',
+                    backgroundColor: '#006B3C',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.2s',
+                  }}
+                >
+                  Problem Appears Resolved
+                </button>
+              )}
             </div>
           </div>
 
@@ -346,7 +453,7 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
         </div>
 
         {/* Attachment Management Card */}
-        <div className="card-surface">
+        <div className="card-surface" style={{ marginBottom: '1.5rem' }}>
           <div className="attachment-header-flex">
             <div>
               <h2 style={{ margin: 0, fontSize: '1.25rem', color: '#111827' }}>Attachments</h2>
@@ -442,6 +549,97 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
               ))}
             </div>
           )}
+        </div>
+
+        {/* Public Comments Card (Requester View - Internal Notes strictly hidden BR-04, AC-04) */}
+        <div className="card-surface">
+          <h2 style={{ margin: '0 0 1rem 0', fontSize: '1.25rem', color: '#111827', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span>💬 Public Comments</span>
+            <span style={{ fontSize: '0.8rem', backgroundColor: '#EAF6EF', color: '#006B3C', padding: '0.15rem 0.5rem', borderRadius: '10px', fontWeight: 600 }}>
+              {comments.length}
+            </span>
+          </h2>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.25rem' }}>
+            {comments.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#9CA3AF', fontStyle: 'italic', fontSize: '0.9rem', backgroundColor: '#F9FAFB', borderRadius: '6px' }}>
+                No comments yet. Send a message to communicate with IT Staff.
+              </div>
+            ) : (
+              comments.map((c) => (
+                <div
+                  key={c.id}
+                  style={{
+                    padding: '0.85rem 1rem',
+                    borderRadius: '6px',
+                    border: '1px solid #E5E7EB',
+                    backgroundColor: '#F9FAFB',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <span style={{ fontWeight: 600, fontSize: '0.88rem', color: '#111827' }}>
+                        {c.author?.name || 'User'}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: '0.7rem',
+                          padding: '0.1rem 0.35rem',
+                          borderRadius: '4px',
+                          fontWeight: 600,
+                          backgroundColor: c.author?.role === 'REQUESTER' ? '#E5E7EB' : '#EAF6EF',
+                          color: c.author?.role === 'REQUESTER' ? '#374151' : '#006B3C',
+                        }}
+                      >
+                        {c.author?.role || 'REQUESTER'}
+                      </span>
+                    </div>
+                    <span style={{ fontSize: '0.78rem', color: '#9CA3AF' }}>
+                      {new Date(c.createdAt).toLocaleString()}
+                    </span>
+                  </div>
+                  <p style={{ margin: 0, fontSize: '0.9rem', color: '#374151', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>
+                    {c.content}
+                  </p>
+                </div>
+              ))
+            )}
+          </div>
+
+          <form onSubmit={handlePostComment} style={{ display: 'flex', gap: '0.5rem' }}>
+            <input
+              type="text"
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder="Type a comment to IT Staff..."
+              style={{
+                flex: 1,
+                padding: '0.65rem 0.85rem',
+                borderRadius: '6px',
+                border: '1px solid #D1D5DB',
+                fontSize: '0.9rem',
+                color: '#111827',
+                outline: 'none',
+              }}
+            />
+            <button
+              type="submit"
+              disabled={isPostingComment || !newComment.trim()}
+              style={{
+                backgroundColor: '#006B3C',
+                color: '#FFFFFF',
+                border: 'none',
+                padding: '0.65rem 1.25rem',
+                borderRadius: '6px',
+                fontSize: '0.9rem',
+                fontWeight: 600,
+                cursor: isPostingComment || !newComment.trim() ? 'not-allowed' : 'pointer',
+                opacity: isPostingComment || !newComment.trim() ? 0.6 : 1,
+              }}
+            >
+              {isPostingComment ? 'Sending...' : 'Send'}
+            </button>
+          </form>
         </div>
       </div>
 

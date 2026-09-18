@@ -296,7 +296,7 @@ router.patch(
         return res.status(403).json({ error: 'Not the ticket owner' });
       }
 
-      const { problemAppearsResolved, requesterResolutionIndicated } = req.body;
+      const { problemAppearsResolved, requesterResolutionIndicated } = req.body || {};
       const value = typeof requesterResolutionIndicated === 'boolean'
         ? requesterResolutionIndicated
         : (typeof problemAppearsResolved === 'boolean' ? problemAppearsResolved : true);

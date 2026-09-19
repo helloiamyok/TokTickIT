@@ -137,6 +137,14 @@ export const StaffTicketQueue: React.FC = () => {
             >
               📥 Ticket Queue
             </button>
+            {user?.role === 'ADMINISTRATOR' && (
+              <button
+                onClick={() => navigate('/admin/users')}
+                className="nav-btn"
+              >
+                👥 User Management
+              </button>
+            )}
           </nav>
         </div>
 

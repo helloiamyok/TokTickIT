@@ -34,13 +34,19 @@ test.describe('Sprint 3 Visual Inspection & Screenshot Captures', () => {
     await page.fill('input[type="password"]', 'InitialPassword123!');
     await page.click('button[type="submit"]');
     await expect(page).toHaveURL(/.*change-password/);
+    await expect(page.locator('h1')).toBeVisible();
+    await page.waitForTimeout(400);
     await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'authentication/04-first-login-change-password.png') });
 
     // Complete password change to unlock
-    await page.fill('input[name="currentPassword"]', 'InitialPassword123!');
+    const curPass = page.locator('input[name="currentPassword"]');
+    if (await curPass.isVisible()) {
+      await curPass.fill('InitialPassword123!');
+    }
     await page.fill('input[name="newPassword"]', 'NewEmilySecurePass123!');
     await page.fill('input[name="confirmPassword"]', 'NewEmilySecurePass123!');
     await page.click('button[type="submit"]');
+    await expect(page).not.toHaveURL(/.*change-password/, { timeout: 10000 });
     await expect(page.locator('header')).toContainText('Emily Davis');
 
     // 05. Authenticated Shell Header (with Administrator)

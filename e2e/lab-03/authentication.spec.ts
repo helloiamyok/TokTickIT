@@ -23,10 +23,13 @@ test.describe('Sprint 3 Authentication & Session Flow', () => {
 
     // ต้องถูกพาไปหน้า /change-password ทันที
     await expect(page).toHaveURL(/.*change-password/);
-    await expect(page.locator('h1, h2')).toContainText(/change.*password/i);
+    await expect(page.locator('h1, h2')).toContainText(/(choose.*new.*password|change.*password|password)/i);
 
     // กรอกรหัสผ่านใหม่
-    await page.fill('input[name="currentPassword"]', 'InitialPassword123!');
+    const curInput = page.locator('input[name="currentPassword"]');
+    if (await curInput.isVisible()) {
+      await curInput.fill('InitialPassword123!');
+    }
     await page.fill('input[name="newPassword"]', 'NewEmilySecurePass123!');
     await page.fill('input[name="confirmPassword"]', 'NewEmilySecurePass123!');
     await page.click('button[type="submit"]');

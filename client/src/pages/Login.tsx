@@ -34,12 +34,6 @@ export const Login: React.FC = () => {
     }
   };
 
-  const handleQuickFill = (demoEmail: string, demoPass: string) => {
-    setEmail(demoEmail);
-    setPassword(demoPass);
-    setError(null);
-  };
-
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#F5F7F6', display: 'flex', flexDirection: 'column' }}>
       {/* Top Navbar Header */}
@@ -75,7 +69,7 @@ export const Login: React.FC = () => {
             borderRadius: '12px',
             boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04)',
             border: '1px solid #E5E7EB',
-            padding: '2.25rem 2rem',
+            padding: '2.5rem 2rem',
             boxSizing: 'border-box',
           }}
         >
@@ -252,83 +246,6 @@ export const Login: React.FC = () => {
               {isSubmitting ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
-
-          {/* Quick Fill Demo Section */}
-          <div style={{ marginTop: '1.75rem', paddingTop: '1.25rem', borderTop: '1px solid #E5E7EB' }}>
-            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.65rem' }}>
-              ⚡ Quick Demo Login:
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.45rem' }}>
-              <button
-                type="button"
-                onClick={() => handleQuickFill('john.smith@tiktockit.com', 'Password123!')}
-                style={{
-                  padding: '0.4rem 0.5rem',
-                  fontSize: '0.75rem',
-                  backgroundColor: '#EDE9FE',
-                  color: '#5B21B6',
-                  border: '1px solid #DDD6FE',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  textAlign: 'left',
-                }}
-              >
-                👑 Administrator
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickFill('michael.brown@tiktockit.com', 'Password123!')}
-                style={{
-                  padding: '0.4rem 0.5rem',
-                  fontSize: '0.75rem',
-                  backgroundColor: '#EAF6EF',
-                  color: '#006B3C',
-                  border: '1px solid #A7F3D0',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  textAlign: 'left',
-                }}
-              >
-                🛠️ IT Staff
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickFill('jennifer.anderson@tiktockit.com', 'Password123!')}
-                style={{
-                  padding: '0.4rem 0.5rem',
-                  fontSize: '0.75rem',
-                  backgroundColor: '#F3F4F6',
-                  color: '#374151',
-                  border: '1px solid #E5E7EB',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  textAlign: 'left',
-                }}
-              >
-                👤 Requester
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickFill('emily.davis@tiktockit.com', 'InitialPassword123!')}
-                style={{
-                  padding: '0.4rem 0.5rem',
-                  fontSize: '0.75rem',
-                  backgroundColor: '#FEF3C7',
-                  color: '#92400E',
-                  border: '1px solid #FDE68A',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  textAlign: 'left',
-                }}
-              >
-                🔑 1st Login Change
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </div>

@@ -134,6 +134,21 @@ function RequesterPortal() {
               </span>
             </div>
             <button
+              onClick={() => navigate('/change-password')}
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                color: '#FFFFFF',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                padding: '0.35rem 0.65rem',
+                borderRadius: '0.375rem',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              🔑 Change Password
+            </button>
+            <button
               onClick={() => logout()}
               style={{
                 backgroundColor: 'rgba(255, 255, 255, 0.15)',
@@ -382,13 +397,7 @@ function AppRoutes() {
 
       <Route
         path="/change-password"
-        element={
-          !user ? (
-            <Navigate to="/login" replace />
-          ) : (
-            <ChangePassword />
-          )
-        }
+        element={<ChangePassword />}
       />
 
       {/* IT Staff & Admin Queue Route */}

@@ -5,6 +5,8 @@ import { useAuth } from '../context/AuthContext';
 export const ChangePassword: React.FC = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -173,19 +175,34 @@ export const ChangePassword: React.FC = () => {
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             {/* New Password Field */}
             <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: '0.88rem',
-                  fontWeight: 500,
-                  color: '#374151',
-                  marginBottom: '0.35rem',
-                }}
-              >
-                New password <span style={{ color: '#DC2626' }}>*</span>
-              </label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                <label
+                  style={{
+                    fontSize: '0.88rem',
+                    fontWeight: 500,
+                    color: '#374151',
+                  }}
+                >
+                  New password <span style={{ color: '#DC2626' }}>*</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  style={{
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    color: '#006B3C',
+                    fontSize: '0.78rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    padding: 0,
+                  }}
+                >
+                  {showNewPassword ? 'Hide 👁️' : 'Show 👁️'}
+                </button>
+              </div>
               <input
-                type="password"
+                type={showNewPassword ? 'text' : 'password'}
                 name="newPassword"
                 required
                 value={newPassword}
@@ -351,19 +368,34 @@ export const ChangePassword: React.FC = () => {
 
             {/* Confirm New Password Field */}
             <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: '0.88rem',
-                  fontWeight: 500,
-                  color: '#374151',
-                  marginBottom: '0.35rem',
-                }}
-              >
-                Confirm new password <span style={{ color: '#DC2626' }}>*</span>
-              </label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                <label
+                  style={{
+                    fontSize: '0.88rem',
+                    fontWeight: 500,
+                    color: '#374151',
+                  }}
+                >
+                  Confirm new password <span style={{ color: '#DC2626' }}>*</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  style={{
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    color: '#006B3C',
+                    fontSize: '0.78rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    padding: 0,
+                  }}
+                >
+                  {showConfirmPassword ? 'Hide 👁️' : 'Show 👁️'}
+                </button>
+              </div>
               <input
-                type="password"
+                type={showConfirmPassword ? 'text' : 'password'}
                 name="confirmPassword"
                 required
                 value={confirmPassword}
@@ -434,7 +466,7 @@ export const ChangePassword: React.FC = () => {
               {isSubmitting ? 'Saving...' : 'Save new password'}
             </button>
 
-            {/* Sign Out Instead Link */}
+            {/* Sign Out Button / Link */}
             <div style={{ textAlign: 'center', marginTop: '0.2rem' }}>
               <button
                 type="button"

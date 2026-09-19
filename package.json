@@ -7,6 +7,11 @@
     "test:server": "npm test --prefix server --",
     "test:client": "npm test --prefix client --",
     "dev:server": "npm run dev --prefix server",
-    "dev:client": "npm run dev --prefix client"
+    "dev:client": "npm run dev --prefix client",
+    "test:e2e": "playwright test e2e/lab-03",
+    "test:screenshots": "playwright test e2e/capture-screenshots.spec.ts"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0"
   }
 }

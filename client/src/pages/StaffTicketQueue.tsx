@@ -283,7 +283,7 @@ export const StaffTicketQueue: React.FC = () => {
 
           {/* Table Container */}
           <div style={{ backgroundColor: '#FFFFFF', borderRadius: '8px', border: '1px solid #E5E7EB', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-            <div className="desktop-table-view" style={{ overflowX: 'auto' }}>
+            <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.88rem' }}>
                 <thead>
                   <tr style={{ backgroundColor: '#F8FAF9', borderBottom: '1px solid #E5E7EB', color: '#4B5563', textTransform: 'uppercase', fontSize: '0.78rem', letterSpacing: '0.04em' }}>

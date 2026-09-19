@@ -478,13 +478,14 @@ export const UserManagement: React.FC = () => {
               </div>
             )}
 
-            <form onSubmit={handleSaveUser} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <form id="user-modal-form" onSubmit={handleSaveUser} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#374151', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
                   Full Name *
                 </label>
                 <input
                   type="text"
+                  name="name"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -506,6 +507,7 @@ export const UserManagement: React.FC = () => {
                 </label>
                 <input
                   type="email"
+                  name="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -523,10 +525,12 @@ export const UserManagement: React.FC = () => {
 
               <div>
                 <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#374151', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
-                  Role *
+                  Role * {user?.id === editingUser?.id && <span style={{ fontSize: '0.72rem', color: '#6B7280', fontWeight: 'normal' }}>(Cannot change own role)</span>}
                 </label>
                 <select
+                  name="role"
                   value={role}
+                  disabled={user?.id === editingUser?.id}
                   onChange={(e) => setRole(e.target.value)}
                   style={{
                     width: '100%',
@@ -536,7 +540,7 @@ export const UserManagement: React.FC = () => {
                     fontSize: '0.9rem',
                     boxSizing: 'border-box',
                     outline: 'none',
-                    backgroundColor: '#FFFFFF',
+                    backgroundColor: user?.id === editingUser?.id ? '#F3F4F6' : '#FFFFFF',
                   }}
                 >
                   <option value="REQUESTER">Requester</option>
@@ -549,12 +553,14 @@ export const UserManagement: React.FC = () => {
                 <input
                   type="checkbox"
                   id="isActive"
+                  name="isActive"
                   checked={isActive}
+                  disabled={user?.id === editingUser?.id}
                   onChange={(e) => setIsActive(e.target.checked)}
-                  style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                  style={{ width: '16px', height: '16px', cursor: user?.id === editingUser?.id ? 'not-allowed' : 'pointer' }}
                 />
-                <label htmlFor="isActive" style={{ fontSize: '0.88rem', fontWeight: 600, color: '#374151', cursor: 'pointer' }}>
-                  Active Account
+                <label htmlFor="isActive" style={{ fontSize: '0.88rem', fontWeight: 600, color: '#374151', cursor: user?.id === editingUser?.id ? 'not-allowed' : 'pointer' }}>
+                  Active Account {user?.id === editingUser?.id && <span style={{ fontSize: '0.75rem', color: '#6B7280', fontWeight: 'normal' }}>(Cannot deactivate own account)</span>}
                 </label>
               </div>
 
@@ -564,6 +570,7 @@ export const UserManagement: React.FC = () => {
                 </label>
                 <input
                   type="password"
+                  name="initialPassword"
                   required={!editingUser}
                   placeholder={editingUser ? 'Leave blank to keep current password' : 'At least 6 characters'}
                   value={initialPassword}
@@ -602,6 +609,7 @@ export const UserManagement: React.FC = () => {
                   Cancel
                 </button>
                 <button
+                  id="save-user-button"
                   type="submit"
                   disabled={isSubmitting}
                   style={{
@@ -616,7 +624,7 @@ export const UserManagement: React.FC = () => {
                     opacity: isSubmitting ? 0.7 : 1,
                   }}
                 >
-                  {isSubmitting ? 'Saving...' : editingUser ? 'Update User' : 'Create User'}
+                  {isSubmitting ? 'Saving...' : 'Save User'}
                 </button>
               </div>
             </form>

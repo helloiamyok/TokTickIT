@@ -66,3 +66,16 @@
 - Tablet (768px - 1023px): Collapsible filter drawer, horizontal table scroll or card conversion.
 - Mobile (< 768px): Single-column cards for queue items and user management rows.
 - Minimum tap target size 44x44px. All form inputs include explicit `<label>` tags and ARIA descriptions.
+
+## 5. Visual & Responsive Inspection Checklist
+
+- [x] **Design Consistency:** All buttons, badges, and surfaces strictly adhere to Zen Green tokens (`#1B4D3E`, neutral gray backgrounds).
+- [x] **Role Navigation:** Dynamic navigation shell hides unauthorized links (e.g. Requesters cannot see IT Queue or Admin Management).
+- [x] **Badges & Labels:** Ticket Status, Requested Priority, and IT Priority have distinct color coding without clashing.
+- [x] **Field Editability:** Clear distinction between editable inputs (e.g. IT Priority dropdown) and read-only text (Requester summary/description).
+- [x] **Validation Feedback:** Inline and banner validation appear adjacent to relevant forms with clear error messages.
+- [x] **Responsive Adaptation:**
+  - Desktop: Multi-column layouts and wide tables render cleanly.
+  - Tablet: Grids adapt to 2 columns, table columns retain critical identifiers.
+  - Mobile: Layout stacks vertically, tables scroll horizontally without breaking layout or clipping text.
+- [x] **Accessibility:** Focus outlines are visible, contrast ratios exceed WCAG AA standards.

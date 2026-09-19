@@ -7,7 +7,7 @@ async function main() {
   console.log('Seeding database for Sprint 3 (TokTickIT)...');
 
   const defaultPasswordHash = await bcrypt.hash('Password123!', 10);
-  const initialPasswordHash = await bcrypt.hash('Initial123!', 10);
+  const initialPasswordHash = await bcrypt.hash('InitialPassword123!', 10);
 
   // 1. Clean existing transactional records safely for idempotency
   await prisma.ticketComment.deleteMany();
@@ -54,13 +54,24 @@ async function main() {
   const vpnSys = relatedSystems.find((s) => s.name === 'VPN')!;
   const emailSys = relatedSystems.find((s) => s.name === 'Email')!;
 
-  // 4. Seed Users (Admin 1, IT Staff 3 Active + 1 Inactive, Requester 4 Active + 1 Inactive)
-  // 4.1 Admin (1 Active)
+  // 4. Seed Users (Admin 2, IT Staff 3 Active + 1 Inactive, Requester 4 Active + 1 Inactive)
+  // 4.1 Admin (2 Active)
   const admin = await prisma.user.create({
     data: {
       email: 'admin@tiktockit.com',
       passwordHash: defaultPasswordHash,
       name: 'System Administrator',
+      role: Role.ADMINISTRATOR,
+      isActive: true,
+      mustChangePassword: false,
+    },
+  });
+
+  const adminJohn = await prisma.user.create({
+    data: {
+      email: 'john.smith@tiktockit.com',
+      passwordHash: defaultPasswordHash,
+      name: 'John Smith',
       role: Role.ADMINISTRATOR,
       isActive: true,
       mustChangePassword: false,

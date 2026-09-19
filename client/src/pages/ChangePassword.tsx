@@ -60,6 +60,7 @@ export const ChangePassword: React.FC = () => {
             <label className="block text-sm font-medium text-gray-700">Current Password</label>
             <input
               type="password"
+              name="currentPassword"
               required
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
@@ -71,6 +72,7 @@ export const ChangePassword: React.FC = () => {
             <label className="block text-sm font-medium text-gray-700">New Password</label>
             <input
               type="password"
+              name="newPassword"
               required
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
@@ -83,6 +85,7 @@ export const ChangePassword: React.FC = () => {
             <label className="block text-sm font-medium text-gray-700">Confirm New Password</label>
             <input
               type="password"
+              name="confirmPassword"
               required
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}

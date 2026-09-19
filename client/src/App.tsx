@@ -5,6 +5,7 @@ import { Login } from './pages/Login'
 import { ChangePassword } from './pages/ChangePassword'
 import { StaffTicketQueue } from './pages/StaffTicketQueue'
 import { StaffTicketDetail } from './pages/StaffTicketDetail'
+import { UserManagement } from './pages/UserManagement'
 import { CreateTicket } from './components/CreateTicket'
 import { MyTickets } from './components/MyTickets'
 import { TicketDetail } from './components/TicketDetail'
@@ -109,6 +110,15 @@ function RequesterPortal() {
                 style={{ backgroundColor: 'rgba(255, 255, 255, 0.25)', fontWeight: 700 }}
               >
                 📥 IT Queue
+              </button>
+            )}
+            {user?.role === 'ADMINISTRATOR' && (
+              <button
+                onClick={() => navigate('/admin/users')}
+                className="nav-btn"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.25)', fontWeight: 700 }}
+              >
+                👥 User Management
               </button>
             )}
           </nav>
@@ -409,6 +419,22 @@ function AppRoutes() {
             <StaffTicketDetail />
           ) : (
             <Navigate to="/tickets" replace />
+          )
+        }
+      />
+
+      {/* Administrator User Management Route */}
+      <Route
+        path="/admin/users"
+        element={
+          !user ? (
+            <Navigate to="/login" replace />
+          ) : user.mustChangePassword ? (
+            <Navigate to="/change-password" replace />
+          ) : user.role === 'ADMINISTRATOR' ? (
+            <UserManagement />
+          ) : (
+            <Navigate to="/it/queue" replace />
           )
         }
       />

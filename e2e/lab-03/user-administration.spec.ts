@@ -14,16 +14,25 @@ test.describe('Sprint 3 Administrator User Management Flow', () => {
     await page.goto('/admin/users');
     await expect(page.locator('h1')).toContainText('User Management');
 
-    // เปิด Modal สร้างผู้ใช้ใหม่
+    // 1. เปิด Modal สร้างผู้ใช้ใหม่
     await page.click('button:has-text("Create User")');
     const randomSuffix = Math.floor(Math.random() * 10000);
-    await page.fill('form input[type="text"], input[name="name"]', `Test Staff ${randomSuffix}`);
-    await page.fill('form input[type="email"], input[name="email"]', `staff${randomSuffix}@tiktockit.com`);
-    await page.selectOption('form select, select[name="role"]', 'IT_STAFF');
-    await page.fill('form input[type="password"], input[name="initialPassword"]', 'StaffTempPass123!');
-    await page.click('button:has-text("Save User"), button:has-text("Create User")');
+    await page.fill('#user-modal-form input[name="name"]', `Test Staff ${randomSuffix}`);
+    await page.fill('#user-modal-form input[name="email"]', `staff${randomSuffix}@tiktockit.com`);
+    await page.selectOption('#user-modal-form select[name="role"]', 'IT_STAFF');
+    await page.fill('#user-modal-form input[name="initialPassword"]', 'StaffTempPass123!');
+    await page.click('#save-user-button');
 
     // ตรวจสอบว่ามีแถวผู้ใช้ใหม่เพิ่มขึ้นในตาราง
     await expect(page.locator('table')).toContainText(`Test Staff ${randomSuffix}`);
+
+    // 2. ตรวจสอบ Safety Rule: ไม่สามารถปิดบัญชีหรือเปลี่ยนบทบาทตนเองได้
+    const adminRow = page.locator('table tbody tr', { hasText: 'John Smith' });
+    await adminRow.locator('button:has-text("Edit")').click();
+    
+    // ตรวจสอบว่า Checkbox Active Account ถูก Disable สำหรับบัญชีของตนเอง
+    const activeCheckbox = page.locator('form input#isActive, form input[name="isActive"]');
+    await expect(activeCheckbox).toBeDisabled();
+    await page.click('button:has-text("Cancel")');
   });
 });

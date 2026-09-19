@@ -37,7 +37,10 @@ test.describe('Sprint 3 Visual Inspection & Screenshot Captures', () => {
     await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'authentication/04-first-login-change-password.png') });
 
     // Complete password change to unlock
-    await page.fill('input[name="currentPassword"]', 'InitialPassword123!');
+    const currentInput = page.locator('input[name="currentPassword"]');
+    if (await currentInput.isVisible()) {
+      await currentInput.fill('InitialPassword123!');
+    }
     await page.fill('input[name="newPassword"]', 'NewEmilySecurePass123!');
     await page.fill('input[name="confirmPassword"]', 'NewEmilySecurePass123!');
     await page.click('button[type="submit"]');

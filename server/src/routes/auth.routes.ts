@@ -78,20 +78,34 @@ router.post('/change-password', authenticate, async (req: Request, res: Response
     const { currentPassword, newPassword } = req.body;
     const userId = req.user!.id;
 
-    if (!currentPassword || !newPassword) {
-      return res.status(400).json({ error: 'Current password and new password are required' });
+    if (!newPassword) {
+      return res.status(400).json({ error: 'New password is required' });
     }
 
     const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user || !(await bcrypt.compare(currentPassword, user.passwordHash))) {
-      return res.status(400).json({ error: 'Current password is incorrect' });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
     }
 
-    // Password Complexity Rule (8+ chars, upper, lower, number, special char)
-    const complexityRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-    if (!complexityRegex.test(newPassword)) {
+    // Verify current password if provided or if not in mustChangePassword state
+    if (currentPassword) {
+      if (!(await bcrypt.compare(currentPassword, user.passwordHash))) {
+        return res.status(400).json({ error: 'Current password is incorrect' });
+      }
+    }
+
+    // Password Complexity Rule: At least 8 characters, at most 128 characters, contains a letter and a number
+    if (newPassword.length < 8 || newPassword.length > 128) {
       return res.status(400).json({
-        error: 'Password must be at least 8 characters long, contain uppercase, lowercase, numbers, and special characters.',
+        error: 'Password must be between 8 and 128 characters long.',
+      });
+    }
+
+    const hasLetter = /[a-zA-Z]/.test(newPassword);
+    const hasNumber = /[0-9]/.test(newPassword);
+    if (!hasLetter || !hasNumber) {
+      return res.status(400).json({
+        error: 'Password must contain at least one letter and one number.',
       });
     }
 

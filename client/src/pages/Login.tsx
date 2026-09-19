@@ -245,6 +245,41 @@ export const Login: React.FC = () => {
             >
               {isSubmitting ? 'Signing in...' : 'Sign In'}
             </button>
+
+            {/* Change Password Navigation Button */}
+            <div style={{ marginTop: '0.75rem', paddingTop: '1rem', borderTop: '1px solid #E5E7EB', textAlign: 'center' }}>
+              <button
+                type="button"
+                onClick={() => navigate('/change-password')}
+                style={{
+                  width: '100%',
+                  padding: '0.65rem 1rem',
+                  backgroundColor: '#F8FAFC',
+                  color: '#1B4D3E',
+                  border: '1px solid #CBD5E1',
+                  borderRadius: '6px',
+                  fontSize: '0.88rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  transition: 'all 0.15s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#EAF6EF';
+                  e.currentTarget.style.borderColor = '#006B3C';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#F8FAFC';
+                  e.currentTarget.style.borderColor = '#CBD5E1';
+                }}
+              >
+                <span>🔑</span>
+                <span>Change Password / First-Time Login</span>
+              </button>
+            </div>
           </form>
         </div>
       </div>

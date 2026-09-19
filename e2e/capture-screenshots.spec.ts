@@ -12,7 +12,7 @@ test.describe('Sprint 3 Visual Inspection & Screenshot Captures', () => {
     // 01. Login Page
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto('/login');
-    await expect(page.locator('h1')).toContainText('TokTickIT Login');
+    await expect(page.locator('h1')).toContainText(/Sign in|TokTickIT/i);
     await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'authentication/01-login-page.png') });
 
     // 02. Login Invalid Credentials

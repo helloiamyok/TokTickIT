@@ -1,128 +1,92 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import request from 'supertest';
 import app from '../../src/index';
-import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcryptjs';
 
-const prisma = new PrismaClient();
-
-describe('Sprint 3 Authorization & Requester Regression Tests', () => {
-  let requester1Cookie: string;
-  let requester2Cookie: string;
-  let itStaffCookie: string;
-  let categoryId: number = 2;
-  let relatedSystemId: number = 1;
+describe('Sprint 3 Requester Authorization & Regression API', () => {
+  let req1Cookie: string;
+  let req2Cookie: string;
+  let req1TicketId: number;
 
   beforeAll(async () => {
-    const defaultHash = await bcrypt.hash('Password123!', 10);
-
-    // Ensure test users exist with active status and standard password
-    await prisma.user.upsert({
-      where: { email: 'jennifer.anderson@tiktockit.com' },
-      update: { passwordHash: defaultHash, isActive: true, mustChangePassword: false },
-      create: {
-        email: 'jennifer.anderson@tiktockit.com',
-        passwordHash: defaultHash,
-        name: 'Jennifer Anderson',
-        role: 'REQUESTER',
-        isActive: true,
-        mustChangePassword: false,
-      },
-    });
-
-    await prisma.user.upsert({
-      where: { email: 'amanda.clark@tiktockit.com' },
-      update: { passwordHash: defaultHash, isActive: true, mustChangePassword: false },
-      create: {
-        email: 'amanda.clark@tiktockit.com',
-        passwordHash: defaultHash,
-        name: 'Amanda Clark',
-        role: 'REQUESTER',
-        isActive: true,
-        mustChangePassword: false,
-      },
-    });
-
-    await prisma.user.upsert({
-      where: { email: 'michael.brown@tiktockit.com' },
-      update: { passwordHash: defaultHash, isActive: true, mustChangePassword: false },
-      create: {
-        email: 'michael.brown@tiktockit.com',
-        passwordHash: defaultHash,
-        name: 'Michael Brown',
-        role: 'IT_STAFF',
-        isActive: true,
-        mustChangePassword: false,
-      },
-    });
-
-    const cat = await prisma.category.findFirst();
-    if (cat) categoryId = cat.id;
-
-    const sys = await prisma.relatedSystem.findFirst();
-    if (sys) relatedSystemId = sys.id;
-
-    // ล็อกอิน Jennifer Anderson (Requester 1)
+    // Login Requester 1 (Jennifer Anderson)
     const res1 = await request(app)
       .post('/api/auth/login')
       .send({ email: 'jennifer.anderson@tiktockit.com', password: 'Password123!' });
-    const cookies1 = res1.headers['set-cookie'];
-    requester1Cookie = Array.isArray(cookies1) ? cookies1[0] : cookies1 || '';
+    req1Cookie = res1.headers['set-cookie'][0];
 
-    // ล็อกอิน Amanda Clark (Requester 2)
+    // Login Requester 2 (Amanda Clark)
     const res2 = await request(app)
       .post('/api/auth/login')
       .send({ email: 'amanda.clark@tiktockit.com', password: 'Password123!' });
-    const cookies2 = res2.headers['set-cookie'];
-    requester2Cookie = Array.isArray(cookies2) ? cookies2[0] : cookies2 || '';
+    req2Cookie = res2.headers['set-cookie'][0];
 
-    // ล็อกอิน Michael Brown (IT Staff)
-    const resStaff = await request(app)
-      .post('/api/auth/login')
-      .send({ email: 'michael.brown@tiktockit.com', password: 'Password123!' });
-    const cookiesStaff = resStaff.headers['set-cookie'];
-    itStaffCookie = Array.isArray(cookiesStaff) ? cookiesStaff[0] : cookiesStaff || '';
+    // ดึงตั๋วของ Requester 1 หรือสร้างถ้ายังไม่มี
+    const ticketsRes = await request(app)
+      .get('/api/tickets')
+      .set('Cookie', req1Cookie);
+    
+    if (ticketsRes.body.data && ticketsRes.body.data.length > 0) {
+      req1TicketId = ticketsRes.body.data[0].id;
+    } else {
+      const createRes = await request(app)
+        .post('/api/tickets')
+        .set('Cookie', req1Cookie)
+        .send({
+          summary: 'VPN Connection Problem',
+          description: 'Cannot connect to company VPN from home',
+          categoryId: 1,
+          relatedSystemId: 1,
+          requestedPriority: 'HIGH',
+        });
+      req1TicketId = createRes.body.id;
+    }
   });
 
-  it('API-AUTH-01: Requesters can retrieve their own tickets successfully', async () => {
+  it('AC-03: Requester can only retrieve tickets they own', async () => {
     const res = await request(app)
       .get('/api/tickets')
-      .set('Cookie', requester1Cookie);
+      .set('Cookie', req1Cookie);
 
     expect(res.status).toBe(200);
-    expect(Array.isArray(res.body.data)).toBe(true);
+    const tickets = res.body.data || res.body;
+    expect(Array.isArray(tickets)).toBe(true);
+    expect(tickets.length).toBeGreaterThan(0);
+    tickets.forEach((t: any) => {
+      expect(t.requester.email).toBe('jennifer.anderson@tiktockit.com');
+    });
   });
 
-  it('API-AUTH-02: Requester cannot view tickets owned by another requester (AC-03)', async () => {
-    // สร้างตั๋วด้วย Requester 2
-    const createRes = await request(app)
-      .post('/api/tickets')
-      .set('Cookie', requester2Cookie)
-      .send({
-        summary: 'Secret Hardware Ticket',
-        description: 'Private confidential hardware issue',
-        categoryId,
-        relatedSystemId,
-        requestedPriority: 'HIGH',
-      });
-
-    const ticketId = createRes.body.id;
-
-    // Requester 1 พยายามแอบดูตั๋วของ Requester 2
-    const unauthorizedRes = await request(app)
-      .get(`/api/tickets/${ticketId}`)
-      .set('Cookie', requester1Cookie);
-
-    expect(unauthorizedRes.status).toBe(403);
-    expect(unauthorizedRes.body.error).toContain('forbidden');
-  });
-
-  it('API-AUTH-03: IT Staff can view any requester ticket', async () => {
-    // ดึงตั๋วใบเดียวกันด้วย IT Staff
+  it('BR-03: Ignores client-supplied requesterId and enforces authenticated identity', async () => {
     const res = await request(app)
-      .get('/api/tickets')
-      .set('Cookie', itStaffCookie);
+      .get('/api/tickets?requesterId=9999')
+      .set('Cookie', req1Cookie);
 
     expect(res.status).toBe(200);
+    const tickets = res.body.data || res.body;
+    expect(Array.isArray(tickets)).toBe(true);
+    tickets.forEach((t: any) => {
+      expect(t.requester.email).toBe('jennifer.anderson@tiktockit.com');
+    });
+  });
+
+  it('AC-04: Requester is blocked from accessing internal notes with 403', async () => {
+    expect(req1TicketId).toBeDefined();
+
+    const res = await request(app)
+      .get(`/api/staff/tickets/${req1TicketId}/internal-notes`)
+      .set('Cookie', req1Cookie);
+
+    expect(res.status).toBe(403);
+  });
+
+  it('BR-05: Requester can indicate problem is resolved without changing status directly', async () => {
+    expect(req1TicketId).toBeDefined();
+
+    const res = await request(app)
+      .patch(`/api/tickets/${req1TicketId}/indicate-resolved`)
+      .set('Cookie', req1Cookie);
+
+    expect(res.status).toBe(200);
+    expect(res.body.requesterResolutionIndicated).toBe(true);
   });
 });

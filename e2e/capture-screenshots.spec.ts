@@ -1,9 +1,21 @@
 import { test, expect } from '@playwright/test';
+import { execSync } from 'child_process';
 import path from 'path';
 
 const SCREENSHOT_BASE = path.resolve(__dirname, '../artifacts/lab-03/screenshots');
 
 test.describe('Sprint 3 Visual Inspection & Screenshot Captures', () => {
+  test.beforeAll(() => {
+    try {
+      execSync('npx prisma db seed', {
+        cwd: path.resolve(__dirname, '../server'),
+        stdio: 'pipe',
+      });
+    } catch (e) {
+      console.error('Failed to seed before screenshot capture:', e);
+    }
+  });
+
   test.beforeEach(async ({ context }) => {
     await context.clearCookies();
   });

@@ -1,6 +1,23 @@
 import { test, expect } from '@playwright/test';
+import { execSync } from 'child_process';
+import path from 'path';
 
 test.describe('Sprint 3 Authentication & Session Flow', () => {
+  test.beforeAll(() => {
+    try {
+      execSync('npx prisma db seed', {
+        cwd: path.resolve(__dirname, '../../server'),
+        stdio: 'pipe',
+      });
+    } catch (e) {
+      console.error('Failed to seed before e2e tests:', e);
+    }
+  });
+
+  test.beforeEach(async ({ context }) => {
+    await context.clearCookies();
+  });
+
   test('E2E-01: Valid login displays authenticated user shell and role', async ({ page }) => {
     await page.goto('/login');
 

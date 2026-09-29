@@ -21,27 +21,41 @@ test.describe('Sprint 3 Visual Inspection & Screenshot Captures', () => {
   });
 
   test('Capture Part 5: Authentication & Password Change', async ({ page, context }) => {
-    // 01. Login Page
     await page.setViewportSize({ width: 1280, height: 800 });
+
+    // 01. Login Page
     await page.goto('/login');
     await expect(page.locator('h1')).toContainText(/Sign in|TokTickIT/i);
     await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'authentication/01-login-page.png') });
 
-    // 02. Login Invalid Credentials
+    // 5.1 / 05. Authenticated Shell Header with Role Badge
+    await page.fill('input[type="email"]', 'john.smith@tiktockit.com');
+    await page.fill('input[type="password"]', 'Password123!');
+    await page.click('button[type="submit"]');
+    await expect(page.locator('header')).toContainText('John Smith');
+    await expect(page.locator('header')).toContainText(/ADMINISTRATOR/i);
+    await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'authentication/05-authenticated-shell-header.png') });
+    await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'authentication/5.1-login-success-role-header.png') });
+
+    // 5.2 / 02. Login Invalid Credentials
+    await context.clearCookies();
+    await page.goto('/login');
     await page.fill('input[type="email"]', 'wrong.user@tiktockit.com');
     await page.fill('input[type="password"]', 'WrongPassword123!');
     await page.click('button[type="submit"]');
     await expect(page.locator('body')).toContainText(/invalid email or password/i);
     await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'authentication/02-login-invalid-credentials.png') });
+    await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'authentication/5.2-login-invalid-credentials.png') });
 
-    // 03. Login Deactivated Account
+    // 5.3 / 03. Login Deactivated Account
     await page.fill('input[type="email"]', 'robert.wilson@tiktockit.com');
     await page.fill('input[type="password"]', 'Password123!');
     await page.click('button[type="submit"]');
     await expect(page.locator('body')).toContainText(/deactivated/i);
     await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'authentication/03-login-deactivated-account.png') });
+    await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'authentication/5.3-login-deactivated-account.png') });
 
-    // 04. Mandatory Change Password
+    // 5.4 / 04. Mandatory Change Password
     await page.fill('input[type="email"]', 'emily.davis@tiktockit.com');
     await page.fill('input[type="password"]', 'InitialPassword123!');
     await page.click('button[type="submit"]');
@@ -49,6 +63,7 @@ test.describe('Sprint 3 Visual Inspection & Screenshot Captures', () => {
     await expect(page.locator('h1')).toBeVisible();
     await page.waitForTimeout(400);
     await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'authentication/04-first-login-change-password.png') });
+    await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'authentication/5.4-mandatory-change-password.png') });
 
     // Complete password change to unlock
     const curPass = page.locator('input[name="currentPassword"]');
@@ -61,14 +76,16 @@ test.describe('Sprint 3 Visual Inspection & Screenshot Captures', () => {
     await expect(page).not.toHaveURL(/.*change-password/, { timeout: 10000 });
     await expect(page.locator('header')).toContainText('Emily Davis');
 
-    // 05. Authenticated Shell Header (with Administrator)
+    // 5.5. Logout Action & Blocked Access
+    await page.click('button:has-text("Logout")');
+    await expect(page).toHaveURL(/.*login/);
     await context.clearCookies();
-    await page.goto('/login');
-    await page.fill('input[type="email"]', 'john.smith@tiktockit.com');
-    await page.fill('input[type="password"]', 'Password123!');
-    await page.click('button[type="submit"]');
-    await expect(page.locator('header')).toContainText('John Smith');
-    await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'authentication/05-authenticated-shell-header.png') });
+
+    // Attempt direct URL access to protected routes
+    await page.goto('/admin/users');
+    await expect(page).toHaveURL(/.*login/);
+    await expect(page.locator('h1')).toContainText(/Sign in|TokTickIT/i);
+    await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'authentication/5.5-logout-action-blocked-access.png') });
   });
 
   test('Capture Part 6: IT Staff Ticket Queue', async ({ page }) => {

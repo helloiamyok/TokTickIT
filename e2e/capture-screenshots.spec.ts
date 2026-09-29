@@ -98,24 +98,36 @@ test.describe('Sprint 3 Visual Inspection & Screenshot Captures', () => {
 
     await page.goto('/it/queue');
     await expect(page.locator('h1')).toContainText(/Ticket Queue/i);
+    await expect(page.locator('table')).toBeVisible();
 
-    // 01. Staff Queue Table
+    // 6.1 / 01. Staff Queue Table
     await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'staff-queue/01-staff-queue-table.png') });
+    await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'staff-queue/6.1-staff-queue-table.png') });
 
-    // 02. Search & Filters
+    // 6.2 / 02. Search & Multi-Filters
     const searchInput = page.locator('input[placeholder*="Search"]');
     if (await searchInput.isVisible()) {
       await searchInput.fill('Laptop');
       await page.keyboard.press('Enter');
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(400);
     }
     await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'staff-queue/02-staff-queue-search-filter.png') });
+    await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'staff-queue/6.2-staff-queue-search-filter.png') });
 
-    // 03. Reset filter and capture pagination
+    // 6.3 / 03. Reset filter and capture Pagination controls
     await searchInput.fill('');
     await page.keyboard.press('Enter');
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(400);
     await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'staff-queue/03-staff-queue-pagination.png') });
+    await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'staff-queue/6.3-staff-queue-pagination.png') });
+
+    // 6.4 / 04. Empty / No-Results Feedback
+    await searchInput.fill('NonExistentTicketQuery999');
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(400);
+    await expect(page.locator('table')).toContainText(/No tickets found/i);
+    await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'staff-queue/04-staff-queue-empty-state.png') });
+    await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'staff-queue/6.4-staff-queue-no-results.png') });
   });
 
   test('Capture Part 7: IT Staff Ticket Detail & Requester View', async ({ page, context }) => {

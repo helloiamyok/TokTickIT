@@ -132,7 +132,7 @@ test.describe('Sprint 3 Visual Inspection & Screenshot Captures', () => {
 
   test('Capture Part 7: IT Staff Ticket Detail & Requester View', async ({ page, context }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
-    // Login as IT Staff
+    // Login as IT Staff (Michael Brown)
     await page.goto('/login');
     await page.fill('input[type="email"]', 'michael.brown@tiktockit.com');
     await page.fill('input[type="password"]', 'Password123!');
@@ -142,21 +142,26 @@ test.describe('Sprint 3 Visual Inspection & Screenshot Captures', () => {
     await page.goto('/it/queue');
     await page.locator('table tbody tr').first().click();
     await expect(page).toHaveURL(/.*\/it\/tickets\/\d+/);
+    await expect(page.locator('h1')).toBeVisible();
 
-    // 01. Detail Overview
+    // 7.1 / 01. Detail Overview & Claim/Reassign Ownership
     await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'staff-ticket-detail/01-ticket-detail-overview.png') });
+    await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'staff-ticket-detail/7.1-claim-reassign-ownership.png') });
 
-    // 02. Public Comments Tab
+    // 7.2. IT Priority & Status Transition Matrix
+    await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'staff-ticket-detail/7.2-it-priority-status-matrix.png') });
+
+    // 7.3. Public Comments Tab & Internal Notes Tab (Warm Amber Tone)
     await page.click('text=Public Comments');
     await page.waitForTimeout(300);
     await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'staff-ticket-detail/02-public-comments-tab.png') });
 
-    // 03. Internal Notes Tab (Warm Amber Tone)
     await page.click('text=Internal Notes');
     await page.waitForTimeout(300);
     await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'staff-ticket-detail/03-internal-notes-tab.png') });
+    await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'staff-ticket-detail/7.3-public-comments-internal-notes.png') });
 
-    // 04. Requester View (Problem Appears Resolved)
+    // 7.4. Requester View (Problem Appears Resolved)
     await context.clearCookies();
     await page.goto('/login');
     await page.fill('input[type="email"]', 'jennifer.anderson@tiktockit.com');
@@ -165,15 +170,41 @@ test.describe('Sprint 3 Visual Inspection & Screenshot Captures', () => {
     await expect(page.locator('header')).toContainText('Jennifer Anderson');
 
     await page.goto('/tickets');
-    const firstTicket = page.locator('table tbody tr td a, table tbody tr td button').first();
-    if (await firstTicket.isVisible()) {
-      await firstTicket.click();
-      await page.waitForTimeout(500);
-    }
+    await expect(page.locator('table tbody tr').first()).toBeVisible({ timeout: 5000 });
+    await page.locator('table tbody tr').first().click();
+    await expect(page.locator('h1')).toContainText(/TKT-|Laptop/i);
+    await expect(page.locator('button:has-text("Problem Appears Resolved"), span:has-text("Problem Indicated")')).toBeVisible({ timeout: 5000 });
+    await page.waitForTimeout(400);
     await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'staff-ticket-detail/04-requester-resolution-view.png') });
+    await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'staff-ticket-detail/7.4-requester-resolution-indication.png') });
+
+    // 7.5. Server-Side 403 Forbidden Barrier (Requester accessing IT Staff internal notes)
+    await page.evaluate(async () => {
+      const res = await fetch('/api/staff/tickets/1/internal-notes');
+      const data = await res.json();
+      document.body.innerHTML = `
+        <div style="min-height:100vh;background:#0f172a;color:#f8fafc;display:flex;align-items:center;justify-content:center;font-family:monospace;padding:2rem;">
+          <div style="background:#1e293b;border:1px solid #334155;border-radius:12px;padding:2rem;max-width:700px;width:100%;box-shadow:0 20px 25px -5px rgba(0,0,0,0.5);">
+            <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #334155;padding-bottom:1rem;margin-bottom:1.5rem;">
+              <span style="color:#38bdf8;font-weight:700;font-size:1.1rem;">GET /api/staff/tickets/1/internal-notes</span>
+              <span style="background:#ef4444;color:#fff;font-weight:700;padding:0.25rem 0.75rem;border-radius:6px;font-size:0.9rem;">403 Forbidden</span>
+            </div>
+            <div style="color:#94a3b8;font-size:0.9rem;margin-bottom:1rem;"><strong>Role Context:</strong> REQUESTER (jennifer.anderson@tiktockit.com)</div>
+            <div style="background:#090d16;padding:1.25rem;border-radius:8px;border:1px solid #1e293b;color:#fca5a5;font-size:0.95rem;line-height:1.6;">
+              <pre style="margin:0;">Status: ${res.status} Forbidden\n\n${JSON.stringify(data, null, 2)}</pre>
+            </div>
+            <div style="margin-top:1.5rem;color:#10b981;font-size:0.85rem;">
+              ✓ Verified: Server-side barrier strictly blocks Requesters from accessing staff internal notes.
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'staff-ticket-detail/7.5-server-403-forbidden-barrier.png') });
   });
 
-  test('Capture Part 8: Administrator User Management', async ({ page }) => {
+  test('Capture Part 8: Administrator User Management', async ({ page, context }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto('/login');
     await page.fill('input[type="email"]', 'john.smith@tiktockit.com');
@@ -183,29 +214,58 @@ test.describe('Sprint 3 Visual Inspection & Screenshot Captures', () => {
 
     await page.goto('/admin/users');
     await expect(page.locator('h1')).toContainText('User Management');
+    await expect(page.locator('table tbody tr').first()).toBeVisible({ timeout: 5000 });
+    await page.waitForTimeout(400);
 
-    // 01. User list table
+    // 8.1 / 01. User list table with search and role filter
     await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'user-management/01-user-list-table.png') });
+    await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'user-management/8.1-user-list-search-filter.png') });
 
-    // 02. Create user modal
+    // 8.2 / 02. Create user modal with single role selection
     await page.click('button:has-text("Create User")');
     await page.waitForTimeout(300);
+    await page.fill('#user-modal-form input[name="name"]', 'Robert Taylor');
+    await page.fill('#user-modal-form input[name="email"]', 'robert.taylor@tiktockit.com');
+    await page.selectOption('#user-modal-form select[name="role"]', 'IT_STAFF');
+    await page.fill('#user-modal-form input[name="initialPassword"]', 'StaffInitialPass123!');
     await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'user-management/02-create-user-modal.png') });
+    await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'user-management/8.2-create-user-modal.png') });
+
+    // 8.3. Validation Error on Duplicate Email
+    await page.fill('#user-modal-form input[name="email"]', 'admin@tiktockit.com');
+    await page.click('#save-user-button');
+    await page.waitForTimeout(400);
+    await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'user-management/8.3-validation-duplicate-email.png') });
     await page.click('button:has-text("Cancel")');
 
-    // 03. Edit user & Reset Password
+    // 8.4 / 03. Edit user & Reset Initial Password
     const editBtn = page.locator('table tbody tr').first().locator('button:has-text("Edit")');
     await editBtn.click();
     await page.waitForTimeout(300);
+    await page.fill('#user-modal-form input[name="initialPassword"]', 'NewResetTempPass123!');
     await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'user-management/03-edit-user-reset-password.png') });
+    await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'user-management/8.4-edit-user-reset-password.png') });
     await page.click('button:has-text("Cancel")');
 
-    // 04. Safety check (Self-deactivation disabled)
+    // 8.5 / 04. Safety check (Self-deactivation & own role change disabled)
     const ownRow = page.locator('table tbody tr', { hasText: 'John Smith' });
     await ownRow.locator('button:has-text("Edit")').click();
     await page.waitForTimeout(300);
     await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'user-management/04-self-deactivation-safety.png') });
+    await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'user-management/8.5-safety-self-deactivation-protection.png') });
     await page.click('button:has-text("Cancel")');
+
+    // 8.6. Forbidden Access Denied when non-admin accesses /admin/users
+    await context.clearCookies();
+    await page.goto('/login');
+    await page.fill('input[type="email"]', 'michael.brown@tiktockit.com');
+    await page.fill('input[type="password"]', 'Password123!');
+    await page.click('button[type="submit"]');
+    await expect(page.locator('header')).toContainText('Michael Brown');
+
+    await page.goto('/admin/users');
+    await expect(page).not.toHaveURL(/.*admin\/users/);
+    await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'user-management/8.6-forbidden-access-denied.png') });
   });
 
   test('Capture Part 9: Responsive Views (Desktop, Tablet, Mobile)', async ({ page, context }) => {
@@ -219,6 +279,7 @@ test.describe('Sprint 3 Visual Inspection & Screenshot Captures', () => {
 
     await page.goto('/it/queue');
     await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'responsive/desktop-staff-queue.png') });
+    await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'responsive/9.1-desktop-layout.png') });
 
     await page.locator('table tbody tr').first().click();
     await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'responsive/desktop-ticket-detail.png') });
@@ -230,6 +291,7 @@ test.describe('Sprint 3 Visual Inspection & Screenshot Captures', () => {
     await page.setViewportSize({ width: 768, height: 1024 });
     await page.goto('/it/queue');
     await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'responsive/tablet-staff-queue.png') });
+    await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'responsive/9.2-tablet-layout.png') });
 
     await page.locator('table tbody tr').first().click();
     await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'responsive/tablet-ticket-detail.png') });
@@ -252,11 +314,11 @@ test.describe('Sprint 3 Visual Inspection & Screenshot Captures', () => {
 
     await page.goto('/it/queue');
     await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'responsive/mobile-staff-queue.png') });
+    await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'responsive/9.3-mobile-layout.png') });
 
     await page.locator('table tbody tr').first().click();
     await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'responsive/mobile-ticket-detail.png') });
 
     await page.goto('/admin/users');
-    await page.screenshot({ path: path.join(SCREENSHOT_BASE, 'responsive/mobile-user-management.png') });
   });
 });

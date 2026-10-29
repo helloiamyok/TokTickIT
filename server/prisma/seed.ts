@@ -10,6 +10,7 @@ async function main() {
   const initialPasswordHash = await bcrypt.hash('InitialPassword123!', 10);
 
   // 1. Clean existing transactional records safely for idempotency
+  await prisma.actionTaken.deleteMany();
   await prisma.ticketComment.deleteMany();
   await prisma.attachment.deleteMany();
   await prisma.ticket.deleteMany();
@@ -249,7 +250,49 @@ async function main() {
     ],
   });
 
-  console.log('Sprint 3 database seeding completed successfully.');
+  // 7. Seed Actions Taken (Sprint 4: Covers 0, 1, and multiple Actions Taken)
+  // Ticket 1: Multiple Actions Taken (2 actions)
+  await prisma.actionTaken.create({
+    data: {
+      ticketId: ticket1.id,
+      actionDateTime: new Date(Date.now() - 3600000 * 2),
+      actionDescription: 'Ran battery diagnostics and health telemetry scan',
+      result: 'Battery wear level estimated at 42%',
+      performedById: staff1.id,
+      followUpRequired: false,
+      attachmentNotes: 'battery_diagnostic_report.pdf',
+    },
+  });
+
+  await prisma.actionTaken.create({
+    data: {
+      ticketId: ticket1.id,
+      actionDateTime: new Date(),
+      actionDescription: 'Diagnosed overheating issue on laptop fan',
+      result: 'Temporary thermal paste applied; new fan ordered',
+      performedById: staff1.id,
+      followUpRequired: true,
+      followUpNote: 'Replace fan once replacement part arrives next Monday',
+      attachmentNotes: 'thermal_diagnostic_log.txt',
+    },
+  });
+
+  // Ticket 2: Exactly 1 Action Taken
+  await prisma.actionTaken.create({
+    data: {
+      ticketId: ticket2.id,
+      actionDateTime: new Date(),
+      actionDescription: 'Replaced faulty Ethernet RJ45 connector',
+      result: 'Network connectivity restored at 1Gbps',
+      performedById: staff2.id,
+      followUpRequired: false,
+      attachmentNotes: 'photo_connector.jpg',
+    },
+  });
+
+  // Ticket 3: 0 Action Taken (Covers empty state)
+
+  console.log('Sprint 4 database seeding completed successfully.');
 }
 
 main()

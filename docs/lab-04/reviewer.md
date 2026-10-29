@@ -9,3 +9,5 @@
 | PR # | Branch | Summary of Changes | Reviewer Feedback | Action Taken | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | #1 | `feature/issue-1-engineering-contract` | Initial spec, api-spec, ui-spec, and test plan for Lab 4 | Specifications are detailed, aligned with requirements, and clear. | Approved without changes. | Merged |
+| #2 | `feature/issue-2-actions-taken-foundation` | ActionTaken Prisma schema, migration, idempotent seed, REST APIs, and automated tests | Ensure performedById is set securely from session token and cannot be overridden by request body. FollowUpNote validation enforced. | Verified security checks and 10/10 automated tests passing without regressions. | Approved |
+

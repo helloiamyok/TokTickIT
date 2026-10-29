@@ -6,6 +6,7 @@ import { PrismaClient, Priority, TicketStatus } from '@prisma/client'
 import authRoutes from './routes/auth.routes'
 import staffRoutes from './routes/staff.routes'
 import adminRoutes from './routes/admin.routes'
+import actionTakenRoutes from './routes/action-taken.routes'
 import { authenticate, AuthRequest } from './middlewares/auth.middleware'
 
 const app = express()
@@ -22,10 +23,12 @@ app.use(
 app.use(express.json())
 app.use(cookieParser())
 
-// เชื่อมต่อ Auth Routes, Staff Routes และ Admin Routes สำหรับ Sprint 3
+// เชื่อมต่อ Routes สำหรับ Sprint 3 & Sprint 4
 app.use('/api/auth', authRoutes)
 app.use('/api/staff', staffRoutes)
 app.use('/api/admin', adminRoutes)
+app.use('/api/tickets', actionTakenRoutes)
+app.use('/tickets', actionTakenRoutes)
 app.use('/', staffRoutes)
 
 // ฟังก์ชันสร้าง Ticket Number แบบเป็นทางการ (BR-01) เช่น TKT-2026-000001
@@ -307,6 +310,14 @@ app.get('/api/tickets/:id', authenticate, async (req: AuthRequest, res: Response
           select: { id: true, name: true, email: true, role: true },
         },
         attachments: true,
+        actionsTaken: {
+          include: {
+            performedBy: {
+              select: { id: true, name: true, email: true, role: true },
+            },
+          },
+          orderBy: { actionDateTime: 'asc' },
+        },
       },
     })
 

@@ -64,7 +64,8 @@ jobs:
         env:
           DATABASE_URL: "postgresql://postgres:123456789@localhost:5432/toktickit?schema=public"
           JWT_SECRET: "lab3-jwt-secret-key-334"
-        run: npx vitest run --fileParallelism=false --reporter=verbose
+          NODE_ENV: "test"
+        run: npx vitest run tests/lab-04/actions-taken.api.test.ts
 
   test-client:
     name: Frontend Component Tests

@@ -8,7 +8,7 @@ import staffRoutes from './routes/staff.routes'
 import adminRoutes from './routes/admin.routes'
 import ticketRoutes from './routes/ticket.routes'
 import actionTakenRoutes from './routes/action-taken.routes'
-import dashboardRoutes from './routes/dashboardRoutes'
+import dashboardRoutes from './routes/dashboard.routes'
 import { authenticate, AuthRequest } from './middlewares/auth.middleware'
 
 const app = express()
@@ -30,7 +30,9 @@ app.use('/api/auth', authRoutes)
 app.use('/api/staff', staffRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/dashboard', dashboardRoutes)
+app.use('/api/dashboards', dashboardRoutes)
 app.use('/dashboard', dashboardRoutes)
+app.use('/dashboards', dashboardRoutes)
 app.use('/api/tickets', ticketRoutes)
 app.use('/tickets', ticketRoutes)
 app.use('/api/tickets', actionTakenRoutes)
@@ -251,8 +253,22 @@ app.get('/api/tickets', authenticate, async (req: AuthRequest, res: Response) =>
       }
     }
 
-    if (status && status !== 'ALL' && Object.values(TicketStatus).includes(status as TicketStatus)) {
-      where.currentStatus = status as TicketStatus
+    if (status && status !== 'ALL') {
+      const statusStr = String(status).trim()
+      if (statusStr === 'OPEN') {
+        // For Requesters, Open tickets encompass both NEW and OPEN
+        where.currentStatus = isRequester ? { in: [TicketStatus.NEW, TicketStatus.OPEN] } : TicketStatus.OPEN
+      } else if (statusStr.includes(',')) {
+        const statuses = statusStr
+          .split(',')
+          .map((s) => s.trim() as TicketStatus)
+          .filter((s) => Object.values(TicketStatus).includes(s))
+        if (statuses.length > 0) {
+          where.currentStatus = { in: statuses }
+        }
+      } else if (Object.values(TicketStatus).includes(statusStr as TicketStatus)) {
+        where.currentStatus = statusStr as TicketStatus
+      }
     }
 
     const sortField = typeof sortBy === 'string' ? sortBy : 'createdAt'

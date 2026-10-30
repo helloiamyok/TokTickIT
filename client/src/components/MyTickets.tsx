@@ -22,12 +22,14 @@ interface MyTicketsProps {
   currentRequester: { id: number; name: string } | null;
   onSelectTicket?: (ticketId: number) => void;
   onCreateNew?: () => void;
+  initialStatusFilter?: string;
 }
 
 export const MyTickets: React.FC<MyTicketsProps> = ({
   currentRequester,
   onSelectTicket,
   onCreateNew,
+  initialStatusFilter,
 }) => {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -35,13 +37,19 @@ export const MyTickets: React.FC<MyTicketsProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [statusFilter, setStatusFilter] = useState(initialStatusFilter || 'ALL');
   const [priorityFilter, setPriorityFilter] = useState('ALL');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
+
+  useEffect(() => {
+    if (initialStatusFilter) {
+      setStatusFilter(initialStatusFilter);
+    }
+  }, [initialStatusFilter]);
 
   useEffect(() => {
     fetch('/api/categories')

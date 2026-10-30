@@ -21,6 +21,7 @@ interface Category {
 function RequesterPortal() {
   const { user, logout } = useAuth()
   const [activeTab, setActiveTab] = useState<'dashboard' | 'list' | 'create' | 'system' | 'detail'>('list')
+  const [ticketStatusFilter, setTicketStatusFilter] = useState<string>('ALL')
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null)
   const [status, setStatus] = useState<string>('Unknown')
   const [categories, setCategories] = useState<Category[]>([])
@@ -187,13 +188,17 @@ function RequesterPortal() {
       {/* Main View Area */}
       {activeTab === 'dashboard' ? (
         <RequesterDashboard
-          onNavigateTickets={() => setActiveTab('list')}
+          onNavigateTickets={(filterStatus) => {
+            setTicketStatusFilter(filterStatus || 'ALL')
+            setActiveTab('list')
+          }}
           onCreateTicket={() => setActiveTab('create')}
           onSelectTicket={handleSelectTicket}
         />
       ) : activeTab === 'list' ? (
         <MyTickets
           currentRequester={user}
+          initialStatusFilter={ticketStatusFilter}
           onSelectTicket={handleSelectTicket}
           onCreateNew={() => setActiveTab('create')}
         />

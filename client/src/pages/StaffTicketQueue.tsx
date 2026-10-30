@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 interface Ticket {
@@ -20,15 +20,24 @@ interface Ticket {
 
 export const StaffTicketQueue: React.FC = () => {
   const { user, logout } = useAuth();
+  const [searchParams] = useSearchParams();
+  const initialStatus = searchParams.get('status') || '';
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState(initialStatus);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const s = searchParams.get('status');
+    if (s !== null) {
+      setStatusFilter(s);
+    }
+  }, [searchParams]);
 
   const fetchTickets = async () => {
     setLoading(true);

@@ -115,6 +115,7 @@ export const getRequesterDashboard = async (req: Request, res: Response) => {
     return res.status(200).json({
       metrics: {
         openTickets: countOpen,
+        open: countOpen,
         inProgress: countInProgress,
         resolved: countResolved,
         closed: countClosed,

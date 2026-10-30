@@ -1,10 +1,4 @@
-import { Router } from 'express';
-import { getStaffDashboard, getRequesterDashboard } from '../controllers/dashboardController';
-import { authenticate } from '../middlewares/auth';
+import router from './dashboard.routes';
 
-const router = Router();
-
-router.get('/staff', authenticate, getStaffDashboard);
-router.get('/requester', authenticate, getRequesterDashboard);
-
+export { getStaffDashboard, getRequesterDashboard } from '../controllers/dashboardController';
 export default router;

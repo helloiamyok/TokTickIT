@@ -64,11 +64,12 @@ export const RequesterDashboard: React.FC<RequesterDashboardProps> = ({
       }
 
       const data = await res.json();
-      setMetrics(data.metrics || {
-        openTickets: 0,
-        inProgress: 0,
-        resolved: 0,
-        closed: 0,
+      const openCount = data.metrics?.openTickets ?? data.metrics?.open ?? 0;
+      setMetrics({
+        openTickets: openCount,
+        inProgress: data.metrics?.inProgress ?? 0,
+        resolved: data.metrics?.resolved ?? 0,
+        closed: data.metrics?.closed ?? 0,
       });
       setRecentTickets(data.recentTickets || []);
     } catch (err: any) {

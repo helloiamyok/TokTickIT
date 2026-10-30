@@ -2,6 +2,27 @@ import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { ALLOWED_TRANSITIONS, TicketStatus } from '../constants/ticketWorkflow';
 
+// Normalize role strings (handles variations like ADMIN, ADMINISTRATOR, IT_STAFF, staff, etc.)
+export function normalizeRole(role?: string): 'REQUESTER' | 'IT_STAFF' | 'ADMINISTRATOR' | 'UNKNOWN' {
+  if (!role) return 'UNKNOWN';
+  const upper = String(role).trim().toUpperCase();
+  if (upper === 'ADMIN' || upper === 'ADMINISTRATOR') return 'ADMINISTRATOR';
+  if (upper === 'IT_STAFF' || upper === 'STAFF' || upper === 'IT') return 'IT_STAFF';
+  if (upper === 'REQUESTER' || upper === 'USER') return 'REQUESTER';
+  return 'UNKNOWN';
+}
+
+// Single source of truth for Ticket API response contract (normalizes status & currentStatus)
+export function formatTicketResponse(ticket: any) {
+  const status = ticket.currentStatus || ticket.status || 'NEW';
+  return {
+    ...ticket,
+    currentStatus: status,
+    status: status, // normalized for contract stability
+    ticketNumber: ticket.ticketNo || ticket.ticketNumber,
+  };
+}
+
 export const updateTicketWorkflowStatus = async (req: Request, res: Response) => {
   const { id } = req.params;
   const {
@@ -43,7 +64,7 @@ export const updateTicketWorkflowStatus = async (req: Request, res: Response) =>
       return res.status(404).json({ error: 'Ticket not found' });
     }
 
-    // Concurrency / Stale Update Guard
+    // Concurrency / Stale Update Guard (BR-04 Concurrency Standard)
     if (clientUpdatedAt) {
       const serverTime = new Date(ticket.updatedAt).getTime();
       const clientTime = new Date(clientUpdatedAt).getTime();
@@ -55,8 +76,10 @@ export const updateTicketWorkflowStatus = async (req: Request, res: Response) =>
       }
     }
 
+    const userRole = normalizeRole(user.role);
+
     // 1. กฎสำหรับ REQUESTER (Resolution Gate)
-    if (user.role === 'REQUESTER') {
+    if (userRole === 'REQUESTER') {
       if (ticket.requesterId !== user.id) {
         return res.status(403).json({ error: 'Forbidden: You do not own this ticket' });
       }
@@ -68,7 +91,7 @@ export const updateTicketWorkflowStatus = async (req: Request, res: Response) =>
         });
       }
 
-      // อนุญาตให้ส่ง advisory note เพื่อแจ้งว่าปัญหาคลี่คลายแล้ว
+      // อนุญาตให้ส่ง advisory note เพื่อแจ้งว่าปัญหาคลี่คลายแล้ว (Single API Contract)
       const isAdvisory =
         requesterIndicatesResolved !== undefined ||
         requesterResolvedNote !== undefined ||
@@ -99,11 +122,7 @@ export const updateTicketWorkflowStatus = async (req: Request, res: Response) =>
           },
         });
 
-        const ticketPayload = {
-          ...updated,
-          status: updated.currentStatus,
-          ticketNumber: updated.ticketNo,
-        };
+        const ticketPayload = formatTicketResponse(updated);
 
         return res.status(200).json({
           message: 'Advisory resolution noted for staff review',
@@ -117,12 +136,8 @@ export const updateTicketWorkflowStatus = async (req: Request, res: Response) =>
       });
     }
 
-    // 2. กฎสำหรับ IT STAFF และ ADMIN
-    if (
-      user.role !== 'IT_STAFF' &&
-      user.role !== 'ADMIN' &&
-      user.role !== 'ADMINISTRATOR'
-    ) {
+    // 2. กฎสำหรับ IT STAFF และ ADMIN (Normalized Role Check)
+    if (userRole !== 'IT_STAFF' && userRole !== 'ADMINISTRATOR') {
       return res.status(403).json({
         error: 'Forbidden: Insufficient permissions to change ticket status',
       });
@@ -155,11 +170,7 @@ export const updateTicketWorkflowStatus = async (req: Request, res: Response) =>
       },
     });
 
-    const ticketPayload = {
-      ...updatedTicket,
-      status: updatedTicket.currentStatus,
-      ticketNumber: updatedTicket.ticketNo,
-    };
+    const ticketPayload = formatTicketResponse(updatedTicket);
 
     return res.status(200).json(ticketPayload);
   } catch (error) {

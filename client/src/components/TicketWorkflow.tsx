@@ -35,6 +35,8 @@ export const TicketWorkflow: React.FC<TicketWorkflowProps> = ({
   useEffect(() => {
     if (initialStatus) {
       setCurrentStatus(initialStatus);
+      setSelectedNextStatus(''); // Reset pending dropdown selection when status updates externally
+      setErrorMsg(null);
     }
   }, [initialStatus]);
 

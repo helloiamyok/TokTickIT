@@ -120,7 +120,10 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ requesterIndicatesResolved: true }),
+        body: JSON.stringify({
+          requesterIndicatesResolved: true,
+          requesterResolvedNote: 'Problem reported as resolved by requester',
+        }),
       })
       if (res.ok) {
         await fetchTicketDetail()

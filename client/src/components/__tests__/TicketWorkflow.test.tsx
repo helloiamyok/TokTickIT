@@ -204,4 +204,33 @@ describe('TicketWorkflow Component (Lab 4)', () => {
     expect(screen.getByTestId('status-badge').textContent).toMatch(/Resolved/i);
     expect(screen.getByTestId('advisory-indicated-badge')).toBeDefined();
   });
+
+  // -------------------------------------------------------------------------
+  // Test 7: Clears selectedNextStatus when currentStatus prop changes externally
+  // -------------------------------------------------------------------------
+  it('clears selectedNextStatus when currentStatus prop changes externally', () => {
+    const { rerender } = render(
+      <TicketWorkflow
+        ticketId={101}
+        currentStatus="IN_PROGRESS"
+        userRole="IT_STAFF"
+      />
+    );
+
+    const select = screen.getByTestId('status-transition-select') as HTMLSelectElement;
+    fireEvent.change(select, { target: { value: 'RESOLVED' } });
+    expect(select.value).toBe('RESOLVED');
+
+    // External status change occurs
+    rerender(
+      <TicketWorkflow
+        ticketId={101}
+        currentStatus="RESOLVED"
+        userRole="IT_STAFF"
+      />
+    );
+
+    const updatedSelect = screen.getByTestId('status-transition-select') as HTMLSelectElement;
+    expect(updatedSelect.value).toBe('');
+  });
 });

@@ -6,6 +6,7 @@ import { PrismaClient, Priority, TicketStatus } from '@prisma/client'
 import authRoutes from './routes/auth.routes'
 import staffRoutes from './routes/staff.routes'
 import adminRoutes from './routes/admin.routes'
+import ticketRoutes from './routes/ticket.routes'
 import actionTakenRoutes from './routes/action-taken.routes'
 import dashboardRoutes from './routes/dashboardRoutes'
 import { authenticate, AuthRequest } from './middlewares/auth.middleware'
@@ -30,6 +31,8 @@ app.use('/api/staff', staffRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/dashboard', dashboardRoutes)
 app.use('/dashboard', dashboardRoutes)
+app.use('/api/tickets', ticketRoutes)
+app.use('/tickets', ticketRoutes)
 app.use('/api/tickets', actionTakenRoutes)
 app.use('/tickets', actionTakenRoutes)
 app.use('/', staffRoutes)

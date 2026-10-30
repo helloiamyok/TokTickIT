@@ -235,7 +235,7 @@ router.patch(
 
 // 3. Update Status (with Transition Matrix validation - BR-11)
 router.patch(
-  ['/tickets/:id/status', '/api/staff/tickets/:id/status'],
+  '/api/staff/tickets/:id/status',
   authenticate,
   requireRole(['IT_STAFF', 'ADMINISTRATOR']),
   async (req: AuthRequest, res: Response) => {

@@ -69,4 +69,44 @@ describe('TicketDetail Component Unit Tests (FR-06, FR-07, FR-08, FR-09)', () =>
       expect(screen.getByText(/403 - Forbidden Access/i)).toBeInTheDocument()
     })
   })
+
+  it('renders staff transition controls in TicketWorkflow when userRole is IT_STAFF', async () => {
+    globalThis.fetch = vi.fn().mockImplementation((url: string) => {
+      if (url.includes('/api/tickets/1')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            id: 1,
+            ticketNumber: 'TKT-2026-000001',
+            summary: 'Broken Keyboard Key',
+            description: 'The Enter key is stuck.',
+            status: 'IN_PROGRESS',
+            currentStatus: 'IN_PROGRESS',
+            requestedPriority: 'MEDIUM',
+            createdAt: new Date().toISOString(),
+            updatedAt: '2026-10-30T10:00:00.000Z',
+            category: { name: 'Hardware' },
+            relatedSystem: { name: 'Corporate Laptop' },
+            requester: { name: 'Jennifer Anderson' },
+            attachments: [],
+          }),
+        })
+      }
+      return Promise.resolve({ ok: true, json: async () => [] })
+    })
+
+    render(
+      <TicketDetail
+        ticketId={1}
+        currentRequester={{ id: 99, name: 'Michael Brown', role: 'IT_STAFF' }}
+        currentUserRole="IT_STAFF"
+        onBack={vi.fn()}
+      />
+    )
+
+    await waitFor(() => {
+      expect(screen.getByTestId('status-transition-select')).toBeInTheDocument()
+      expect(screen.getByTestId('staff-workflow-section')).toBeInTheDocument()
+    })
+  })
 })

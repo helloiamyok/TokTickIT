@@ -32,7 +32,7 @@ describe('Actions Taken Foundation API (Lab 4)', () => {
 
     // 4. Retrieve ticket IDs from tickets list
     const ticketsRes = await request(app)
-      .get('/api/tickets')
+      .get('/api/tickets?limit=100')
       .set('Cookie', staffCookie);
 
     const tickets = ticketsRes.body.data;

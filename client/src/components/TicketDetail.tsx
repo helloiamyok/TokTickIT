@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useContext } from 'react'
 import { ActionsTakenSection } from './ActionsTakenSection'
+import { TicketWorkflow } from './TicketWorkflow'
+import { AuthContext } from '../context/AuthContext'
 
 interface Attachment {
   id: number
@@ -44,15 +46,26 @@ interface TicketDetailData {
 
 interface TicketDetailProps {
   ticketId: number
-  currentRequester: { id: number; name: string } | null
+  currentRequester?: { id: number; name: string; role?: string } | null
+  currentUserRole?: string
+  userRole?: string
   onBack: () => void
 }
 
 export const TicketDetail: React.FC<TicketDetailProps> = ({
   ticketId,
   currentRequester,
+  currentUserRole,
+  userRole,
   onBack,
 }) => {
+  const auth = useContext(AuthContext)
+  const effectiveRole =
+    userRole ||
+    currentUserRole ||
+    currentRequester?.role ||
+    auth?.user?.role ||
+    'REQUESTER'
   const [ticket, setTicket] = useState<TicketDetailData | null>(null)
   const [comments, setComments] = useState<CommentItem[]>([])
   const [newComment, setNewComment] = useState('')
@@ -112,15 +125,24 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
     fetchTicketDetail()
   }, [ticketId, currentRequester])
 
-  // Handle Requester Indicate Resolved (BR-05)
+  // Handle Requester Indicate Resolved (BR-05) via canonical /api/tickets/:id/status endpoint (Single source of truth)
   const handleIndicateResolved = async () => {
     try {
-      const res = await fetch(`/api/tickets/${ticketId}/indicate-resolved`, {
+      const payload: Record<string, any> = {
+        requesterIndicatesResolved: true,
+        requesterResolvedNote: 'Problem reported as resolved by requester',
+      }
+      if (ticket?.updatedAt) {
+        payload.updatedAt = ticket.updatedAt
+      }
+      const res = await fetch(`/api/tickets/${ticketId}/status`, {
         method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
+        body: JSON.stringify(payload),
       })
       if (res.ok) {
-        setTicket((prev) => (prev ? { ...prev, requesterResolutionIndicated: true } : null))
+        await fetchTicketDetail()
       }
     } catch (err) {
       console.error('Failed to indicate resolved', err)
@@ -453,6 +475,19 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
           </div>
         </div>
 
+        {/* Ticket Lifecycle Workflow Control (Lab 4) */}
+        <TicketWorkflow
+          ticketId={ticket.id}
+          currentStatus={currentStatus}
+          userRole={effectiveRole}
+          updatedAt={ticket.updatedAt}
+          requesterResolutionIndicated={ticket.requesterResolutionIndicated}
+          onStatusUpdated={(newStatus) => {
+            setTicket((prev) => (prev ? { ...prev, status: newStatus, currentStatus: newStatus } : null))
+          }}
+          onIndicateResolved={fetchTicketDetail}
+        />
+
         {/* Attachment Management Card */}
         <div className="card-surface" style={{ marginBottom: '1.5rem' }}>
           <div className="attachment-header-flex">
@@ -646,7 +681,7 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
         {/* Actions Taken Section */}
         <ActionsTakenSection
           ticketId={ticket.id}
-          currentUserRole="REQUESTER"
+          currentUserRole={effectiveRole}
           onActionCreated={fetchTicketDetail}
         />
       </div>

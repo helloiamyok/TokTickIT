@@ -16,14 +16,15 @@ export interface TicketWorkflowProps {
 
 export const TicketWorkflow: React.FC<TicketWorkflowProps> = ({
   ticketId,
-  currentStatus: initialStatus,
+  currentStatus: propStatus,
   userRole = 'REQUESTER',
-  requesterResolutionIndicated: initialIndicated = false,
+  requesterResolutionIndicated: propResolutionIndicated = false,
   onStatusUpdated,
   onIndicateResolved,
 }) => {
-  const [currentStatus, setCurrentStatus] = useState(initialStatus || 'NEW');
-  const [resolutionIndicated, setResolutionIndicated] = useState(Boolean(initialIndicated));
+  // Optimistic overrides for snappy local feedback
+  const [optimisticStatus, setOptimisticStatus] = useState<string | null>(null);
+  const [optimisticIndicated, setOptimisticIndicated] = useState<boolean | null>(null);
   const [selectedNextStatus, setSelectedNextStatus] = useState('');
   const [advisoryNote, setAdvisoryNote] = useState('');
   const [showAdvisoryInput, setShowAdvisoryInput] = useState(false);
@@ -31,18 +32,21 @@ export const TicketWorkflow: React.FC<TicketWorkflowProps> = ({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  // Synchronize state when props update (prevents stale UI state after re-fetching / parent updates)
+  // Synchronize deterministically whenever parent passes new props (single source of truth)
   useEffect(() => {
-    if (initialStatus) {
-      setCurrentStatus(initialStatus);
-      setSelectedNextStatus(''); // Reset pending dropdown selection when status updates externally
-      setErrorMsg(null);
-    }
-  }, [initialStatus]);
+    setOptimisticStatus(null);
+    setSelectedNextStatus('');
+    setErrorMsg(null);
+  }, [propStatus]);
 
   useEffect(() => {
-    setResolutionIndicated(Boolean(initialIndicated));
-  }, [initialIndicated]);
+    setOptimisticIndicated(null);
+  }, [propResolutionIndicated]);
+
+  // Derived state: authoritative prop takes precedence, optimistic fallback used during in-flight mutations
+  const currentStatus = optimisticStatus || propStatus || 'NEW';
+  const resolutionIndicated =
+    optimisticIndicated !== null ? optimisticIndicated : Boolean(propResolutionIndicated);
 
   const isStaffOrAdmin = userRole === 'IT_STAFF' || userRole === 'ADMINISTRATOR' || userRole === 'ADMIN';
   const isRequester = !isStaffOrAdmin;
@@ -77,7 +81,7 @@ export const TicketWorkflow: React.FC<TicketWorkflowProps> = ({
       }
 
       const updated = data.currentStatus || data.status || nextStatus;
-      setCurrentStatus(updated);
+      setOptimisticStatus(updated);
       setSelectedNextStatus('');
       setSuccessMsg(`Ticket status successfully moved to ${STATUS_LABELS[updated] || updated}`);
       onStatusUpdated?.(updated);
@@ -111,7 +115,7 @@ export const TicketWorkflow: React.FC<TicketWorkflowProps> = ({
         throw new Error(data.error || 'Failed to send advisory note');
       }
 
-      setResolutionIndicated(true);
+      setOptimisticIndicated(true);
       setShowAdvisoryInput(false);
       setAdvisoryNote('');
       setSuccessMsg('Thank you! Your resolution note has been sent for IT staff review.');

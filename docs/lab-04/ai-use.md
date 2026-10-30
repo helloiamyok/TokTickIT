@@ -19,6 +19,8 @@
 | 6 | Concurrency & Stale Update Handling | "ทุกการอัปเดตสถานะ Ticket ต้องตรวจสอบเงื่อนไขผ่าน updatedAt หรือ Version token เพื่อป้องกันการเขียนทับแบบ Stale update" | ออกแบบ Optimistic Concurrency Control โดยใช้ `updatedAt` / Version token เพื่อตรวจจับการแก้ไขพร้อมกัน และส่งคืนรหัส HTTP `409 Conflict` เมื่อข้อมูลไม่ตรงกัน |
 | 7 | Zen Green UI Dashboard & Form Spec | "การออกแบบอิงตามภาษา Zen Green... IT Staff Dashboard (5 Metric Cards, Recent Tickets, Quick Actions), Requester Dashboard (4 Cards), และ Actions Taken Form/Modal" | จัดทำ UI Specification ละเอียดตามแนวทาง Zen Green (`#1B4D3E`) กำหนดการทำงานของ Interactive Form, Dynamic Validation (ช่อง Follow-up Note แสดง Required เมื่อเลือก Follow-up Required), และ Responsive Layouts |
 | 8 | Test Plan & Traceability Matrix | "กำหนดรายการแผนการทดสอบล่วงหน้าเพื่อเตรียมพร้อมก่อนเริ่มเขียนโค้ด: API Tests, Component Tests, E2E Tests" | จัดทำตาราง Test Plan & Traceability Matrix 8 รายการครอบคลุม AC-01 ถึง AC-04, ระบุพาธไฟล์ Automated Tests สำหรับ API, Component, และ Playwright E2E ล่วงหน้า |
+| 9 | Issue 3 Actions Taken UI | "พัฒนาและปรับปรุง UI ส่วน Actions Taken บนหน้าจอ Ticket Detail ตามธีม Zen Green โดยรองรับการแสดงผลตารางรายการ, การสร้างบันทึกใหม่, ตรวจสอบสิทธิ์การใช้งานตาม Role, การตรวจสอบความถูกต้องของฟอร์ม (Validation) และชุดทดสอบระดับ Component" | พัฒนา `ActionsTakenSection.tsx` พร้อม Role Gating, Form Validation, Modal Form, และชุดทดสอบระดับ Component (`ActionsTaken.test.tsx`) ครบถ้วน |
+| 10 | Issue 4 Ticket Workflow & Resolution Gate | "พัฒนาระบบควบคุมวงจรชีวิตและสถานะของ Ticket (Status Transition Matrix) พร้อมบังคับใช้กฎ Resolution Gate อย่างเข้มงวด ทั้งระดับ Backend Validation และ Frontend UI Feedback" | พัฒนา `ticketWorkflow.ts` constants, `ticketController.ts` พร้อม Resolution Gate (403 สำหรับ Requester), `ticket-workflow.api.test.ts` (10 tests), `TicketWorkflow.tsx` component, และ `TicketWorkflow.test.tsx` (8 tests) |
 
 ---
 
@@ -39,3 +41,4 @@
 1. **การใช้ Contract-First Development ในทุก Sprint:** การตกลง Spec ของ API และ Data Model ร่วมกับ AI ให้เสร็จสมบูรณ์ก่อนเริ่มเขียนโค้ดช่วยลดการรื้อโค้ดในภายหลัง และทำให้การพัฒนาฝั่ง Frontend กับ Backend สามารถทำควบคู่กันได้ทันที
 2. **การเขียน Test Scenarios ล่วงหน้า (Test-Driven Mindset):** นำตาราง Test Plan ใน `tests.md` ไปใช้เป็นแนวทางในการเขียน Unit, API และ Playwright Tests ก่อนหรือควบคู่กับการเขียนฟีเจอร์ เพื่อให้มั่นใจว่าการพัฒนาจะผ่านเกณฑ์ Acceptance Criteria ตั้งแต่รอบแรก
 3. **การรักษาประวัติการพัฒนาและการ Peer Review อย่างสม่ำเสมอ:** ใช้ `reviewer.md` ในการบันทึกฟีดแบ็กและปรับปรุงโค้ดอย่างต่อเนื่องในทุก Pull Request เพื่อยกระดับคุณภาพโค้ดและความปลอดภัยของระบบ
+

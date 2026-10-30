@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ActionsTakenSection } from '../components/ActionsTakenSection';
+import { TicketWorkflow } from '../components/TicketWorkflow';
 
 interface UserSummary {
   id: number | string;
@@ -410,6 +411,18 @@ export const StaffTicketDetail: React.FC = () => {
                   <span><strong>Requester Resolution Indicated:</strong> The requester noted that this issue appears to be resolved. Please verify and formally update status.</span>
                 </div>
               )}
+
+              {/* Ticket Lifecycle & Status Transition Workflow (Lab 4) */}
+              <TicketWorkflow
+                ticketId={ticket.id}
+                currentStatus={currentStatus}
+                userRole={user?.role || 'IT_STAFF'}
+                updatedAt={ticket.updatedAt}
+                requesterResolutionIndicated={ticket.requesterResolutionIndicated}
+                onStatusUpdated={(newSt) => {
+                  setTicket((prev) => (prev ? { ...prev, status: newSt, currentStatus: newSt } : null));
+                }}
+              />
 
               {/* Meta Grid Card */}
               <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #E5E7EB', borderRadius: '10px', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>

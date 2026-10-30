@@ -112,6 +112,12 @@ router.get(
           requester: { select: { id: true, name: true, email: true, role: true } },
           assignedTo: { select: { id: true, name: true, email: true, role: true } },
           attachments: { where: { isDeleted: false } },
+          actionsTaken: {
+            include: {
+              performedBy: { select: { id: true, name: true, email: true, role: true } },
+            },
+            orderBy: { actionDateTime: 'asc' },
+          },
         },
       });
 

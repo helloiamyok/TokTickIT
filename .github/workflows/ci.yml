@@ -20,7 +20,7 @@ jobs:
         image: postgres:15-alpine
         env:
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: password123
+          POSTGRES_PASSWORD: "123456789"
           POSTGRES_DB: toktickit
         ports:
           - 5432:5432
@@ -43,10 +43,17 @@ jobs:
         working-directory: server
         run: npm install --no-audit
 
+      - name: Configure server environment
+        working-directory: server
+        run: |
+          echo 'DATABASE_URL="postgresql://postgres:123456789@localhost:5432/toktickit?schema=public"' > .env
+          echo 'JWT_SECRET="lab3-jwt-secret-key-334"' >> .env
+          echo 'PORT=3000' >> .env
+
       - name: Apply Prisma migrations & seed database
         working-directory: server
         env:
-          DATABASE_URL: "postgresql://postgres:password123@localhost:5432/toktickit?schema=public"
+          DATABASE_URL: "postgresql://postgres:123456789@localhost:5432/toktickit?schema=public"
         run: |
           npx prisma migrate deploy
           npx prisma generate
@@ -55,9 +62,9 @@ jobs:
       - name: Run server automated tests
         working-directory: server
         env:
-          DATABASE_URL: "postgresql://postgres:password123@localhost:5432/toktickit?schema=public"
+          DATABASE_URL: "postgresql://postgres:123456789@localhost:5432/toktickit?schema=public"
           JWT_SECRET: "lab3-jwt-secret-key-334"
-        run: npm test
+        run: npx vitest run --fileParallelism=false --reporter=verbose
 
   test-client:
     name: Frontend Component Tests

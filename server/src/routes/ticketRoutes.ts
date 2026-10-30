@@ -9,11 +9,13 @@ router.patch('/:id/status', authenticate, updateTicketWorkflowStatus);
 
 // Aliases for compatibility
 router.patch('/:id/indicate-resolved', authenticate, (req, res) => {
+  req.body = req.body || {};
   req.body.indicateResolved = true;
   return updateTicketWorkflowStatus(req, res);
 });
 
 router.patch('/:id/resolution-feedback', authenticate, (req, res) => {
+  req.body = req.body || {};
   req.body.indicateResolved = true;
   return updateTicketWorkflowStatus(req, res);
 });

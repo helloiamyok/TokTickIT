@@ -17,8 +17,8 @@ describe('IT Staff Dashboard API (Lab 4)', () => {
       });
     };
 
-    const staff = await prisma.user.findFirst({ where: { role: 'IT_STAFF' } });
-    const requester = await prisma.user.findFirst({ where: { role: 'REQUESTER' } });
+    const staff = await prisma.user.findFirst({ where: { role: 'IT_STAFF', isActive: true } });
+    const requester = await prisma.user.findFirst({ where: { role: 'REQUESTER', isActive: true } });
 
     if (!staff || !requester) {
       throw new Error('Seed data required: staff and requester users');

@@ -18,9 +18,9 @@ describe('Requester Dashboard API (Lab 4)', () => {
       });
     };
 
-    const requester1 = await prisma.user.findFirst({ where: { role: 'REQUESTER' } });
+    const requester1 = await prisma.user.findFirst({ where: { role: 'REQUESTER', isActive: true } });
     const requester2 = await prisma.user.findFirst({
-      where: { role: 'REQUESTER', NOT: { id: requester1?.id } },
+      where: { role: 'REQUESTER', isActive: true, NOT: { id: requester1?.id } },
     });
 
     if (!requester1 || !requester2) {

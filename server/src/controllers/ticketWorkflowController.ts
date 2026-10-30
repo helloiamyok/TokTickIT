@@ -31,7 +31,7 @@ export const updateTicketWorkflowStatus = async (req: Request, res: Response) =>
     requesterResolvedNote,
     indicateResolved,
     updatedAt: clientUpdatedAt,
-  } = req.body;
+  } = req.body || {};
   const user = (req as any).user;
 
   if (!user) {

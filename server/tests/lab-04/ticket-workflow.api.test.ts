@@ -20,11 +20,11 @@ describe('Ticket Workflow and Resolution Gate API (Lab 4)', () => {
       });
     };
 
-    // 1. ดึงผู้ใช้สำหรับทดสอบจาก Seed Data
-    const staff = await prisma.user.findFirst({ where: { role: 'IT_STAFF' } });
-    const requester = await prisma.user.findFirst({ where: { role: 'REQUESTER' } });
+    // 1. ดึงผู้ใช้สำหรับทดสอบจาก Seed Data (ต้อง active)
+    const staff = await prisma.user.findFirst({ where: { role: 'IT_STAFF', isActive: true } });
+    const requester = await prisma.user.findFirst({ where: { role: 'REQUESTER', isActive: true } });
     const otherRequester = await prisma.user.findFirst({
-      where: { role: 'REQUESTER', NOT: { id: requester?.id } },
+      where: { role: 'REQUESTER', isActive: true, NOT: { id: requester?.id } },
     });
 
     if (!staff || !requester || !otherRequester) {

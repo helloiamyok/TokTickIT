@@ -16,8 +16,8 @@ describe('Dashboard API Smoke Tests (Issue 5 Verification)', () => {
       });
     };
 
-    const staffUser = await prisma.user.findFirst({ where: { role: 'IT_STAFF' } });
-    const requesterUser = await prisma.user.findFirst({ where: { role: 'REQUESTER' } });
+    const staffUser = await prisma.user.findFirst({ where: { role: 'IT_STAFF', isActive: true } });
+    const requesterUser = await prisma.user.findFirst({ where: { role: 'REQUESTER', isActive: true } });
 
     if (!staffUser || !requesterUser) {
       throw new Error('Prisma seed data required: staff and requester users');

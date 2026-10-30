@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { ActionsTakenSection } from './ActionsTakenSection'
 
 interface Attachment {
   id: number
@@ -641,6 +642,13 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
             </button>
           </form>
         </div>
+
+        {/* Actions Taken Section */}
+        <ActionsTakenSection
+          ticketId={ticket.id}
+          currentUserRole="REQUESTER"
+          onActionCreated={fetchTicketDetail}
+        />
       </div>
 
       {/* Mandatory Reason Soft-Delete Modal */}

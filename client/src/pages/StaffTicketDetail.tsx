@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { ActionsTakenSection } from '../components/ActionsTakenSection';
 
 interface UserSummary {
   id: number | string;
@@ -681,6 +682,13 @@ export const StaffTicketDetail: React.FC = () => {
                   </form>
                 </div>
               </div>
+
+              {/* Actions Taken Section for IT Staff / Admin */}
+              <ActionsTakenSection
+                ticketId={ticket.id}
+                currentUserRole={user?.role || 'IT_STAFF'}
+                onActionCreated={loadTicketData}
+              />
             </>
           )}
         </div>

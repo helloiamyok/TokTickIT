@@ -417,6 +417,7 @@ export const StaffTicketDetail: React.FC = () => {
                 ticketId={ticket.id}
                 currentStatus={currentStatus}
                 userRole={user?.role || 'IT_STAFF'}
+                updatedAt={ticket.updatedAt}
                 requesterResolutionIndicated={ticket.requesterResolutionIndicated}
                 onStatusUpdated={(newSt) => {
                   setTicket((prev) => (prev ? { ...prev, status: newSt, currentStatus: newSt } : null));

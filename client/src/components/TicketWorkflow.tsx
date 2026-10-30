@@ -9,6 +9,7 @@ export interface TicketWorkflowProps {
   ticketId: number;
   currentStatus: string;
   userRole?: string;
+  updatedAt?: string;
   requesterResolutionIndicated?: boolean;
   onStatusUpdated?: (newStatus: string) => void;
   onIndicateResolved?: () => void;
@@ -18,6 +19,7 @@ export const TicketWorkflow: React.FC<TicketWorkflowProps> = ({
   ticketId,
   currentStatus: propStatus,
   userRole = 'REQUESTER',
+  updatedAt,
   requesterResolutionIndicated: propResolutionIndicated = false,
   onStatusUpdated,
   onIndicateResolved,
@@ -67,14 +69,23 @@ export const TicketWorkflow: React.FC<TicketWorkflowProps> = ({
       setErrorMsg(null);
       setSuccessMsg(null);
 
+      const payload: Record<string, any> = { status: nextStatus };
+      if (updatedAt) {
+        payload.updatedAt = updatedAt;
+      }
+
       const res = await fetch(`/api/tickets/${ticketId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ status: nextStatus }),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
+
+      if (res.status === 409) {
+        throw new Error(data.error || 'Ticket has been modified by another user. Please refresh and try again.');
+      }
 
       if (!res.ok) {
         throw new Error(data.error || 'Failed to update ticket status');
@@ -100,16 +111,25 @@ export const TicketWorkflow: React.FC<TicketWorkflowProps> = ({
       setErrorMsg(null);
       setSuccessMsg(null);
 
+      const payload: Record<string, any> = {
+        requesterResolvedNote: advisoryNote.trim() || 'Problem reported as resolved by requester',
+      };
+      if (updatedAt) {
+        payload.updatedAt = updatedAt;
+      }
+
       const res = await fetch(`/api/tickets/${ticketId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({
-          requesterResolvedNote: advisoryNote.trim() || 'Problem reported as resolved by requester',
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
+
+      if (res.status === 409) {
+        throw new Error(data.error || 'Ticket has been modified by another user. Please refresh and try again.');
+      }
 
       if (!res.ok) {
         throw new Error(data.error || 'Failed to send advisory note');

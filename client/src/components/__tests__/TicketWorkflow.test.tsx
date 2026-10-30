@@ -233,4 +233,81 @@ describe('TicketWorkflow Component (Lab 4)', () => {
     const updatedSelect = screen.getByTestId('status-transition-select') as HTMLSelectElement;
     expect(updatedSelect.value).toBe('');
   });
+
+  // -------------------------------------------------------------------------
+  // Test 8: Sends updatedAt in PATCH payload for stale update protection
+  // -------------------------------------------------------------------------
+  it('sends updatedAt in PATCH payload for stale update protection when provided', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        id: 101,
+        status: 'RESOLVED',
+        currentStatus: 'RESOLVED',
+      }),
+    });
+    global.fetch = fetchMock;
+
+    const sampleUpdatedAt = '2026-10-30T10:00:00.000Z';
+
+    render(
+      <TicketWorkflow
+        ticketId={101}
+        currentStatus="IN_PROGRESS"
+        userRole="IT_STAFF"
+        updatedAt={sampleUpdatedAt}
+      />
+    );
+
+    const select = screen.getByTestId('status-transition-select');
+    fireEvent.change(select, { target: { value: 'RESOLVED' } });
+    fireEvent.click(screen.getByTestId('apply-status-transition-btn'));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        '/api/tickets/101/status',
+        expect.objectContaining({
+          method: 'PATCH',
+          body: JSON.stringify({
+            status: 'RESOLVED',
+            updatedAt: sampleUpdatedAt,
+          }),
+        })
+      );
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Test 9: Displays error alert when 409 STALE_UPDATE_CONFLICT is returned
+  // -------------------------------------------------------------------------
+  it('displays error alert when 409 STALE_UPDATE_CONFLICT is returned from server', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      status: 409,
+      ok: false,
+      json: async () => ({
+        error: 'Ticket has been modified by another user. Please refresh and try again.',
+        code: 'STALE_UPDATE_CONFLICT',
+      }),
+    });
+    global.fetch = fetchMock;
+
+    render(
+      <TicketWorkflow
+        ticketId={101}
+        currentStatus="IN_PROGRESS"
+        userRole="IT_STAFF"
+        updatedAt="2020-01-01T00:00:00.000Z"
+      />
+    );
+
+    const select = screen.getByTestId('status-transition-select');
+    fireEvent.change(select, { target: { value: 'RESOLVED' } });
+    fireEvent.click(screen.getByTestId('apply-status-transition-btn'));
+
+    await waitFor(() => {
+      const errorAlert = screen.getByTestId('workflow-error-alert');
+      expect(errorAlert).toBeDefined();
+      expect(errorAlert.textContent).toMatch(/modified by another user/i);
+    });
+  });
 });

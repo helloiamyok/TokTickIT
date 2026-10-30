@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ALLOWED_TRANSITIONS,
   STATUS_LABELS,
@@ -23,13 +23,24 @@ export const TicketWorkflow: React.FC<TicketWorkflowProps> = ({
   onIndicateResolved,
 }) => {
   const [currentStatus, setCurrentStatus] = useState(initialStatus || 'NEW');
-  const [resolutionIndicated, setResolutionIndicated] = useState(initialIndicated);
+  const [resolutionIndicated, setResolutionIndicated] = useState(Boolean(initialIndicated));
   const [selectedNextStatus, setSelectedNextStatus] = useState('');
   const [advisoryNote, setAdvisoryNote] = useState('');
   const [showAdvisoryInput, setShowAdvisoryInput] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  // Synchronize state when props update (prevents stale UI state after re-fetching / parent updates)
+  useEffect(() => {
+    if (initialStatus) {
+      setCurrentStatus(initialStatus);
+    }
+  }, [initialStatus]);
+
+  useEffect(() => {
+    setResolutionIndicated(Boolean(initialIndicated));
+  }, [initialIndicated]);
 
   const isStaffOrAdmin = userRole === 'IT_STAFF' || userRole === 'ADMINISTRATOR' || userRole === 'ADMIN';
   const isRequester = !isStaffOrAdmin;

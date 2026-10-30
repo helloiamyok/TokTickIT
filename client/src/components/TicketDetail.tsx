@@ -113,15 +113,17 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
     fetchTicketDetail()
   }, [ticketId, currentRequester])
 
-  // Handle Requester Indicate Resolved (BR-05)
+  // Handle Requester Indicate Resolved (BR-05) via canonical /api/tickets/:id/status endpoint (Single source of truth)
   const handleIndicateResolved = async () => {
     try {
-      const res = await fetch(`/api/tickets/${ticketId}/indicate-resolved`, {
+      const res = await fetch(`/api/tickets/${ticketId}/status`, {
         method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
+        body: JSON.stringify({ requesterIndicatesResolved: true }),
       })
       if (res.ok) {
-        setTicket((prev) => (prev ? { ...prev, requesterResolutionIndicated: true } : null))
+        await fetchTicketDetail()
       }
     } catch (err) {
       console.error('Failed to indicate resolved', err)
@@ -460,6 +462,9 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
           currentStatus={currentStatus}
           userRole="REQUESTER"
           requesterResolutionIndicated={ticket.requesterResolutionIndicated}
+          onStatusUpdated={(newStatus) => {
+            setTicket((prev) => (prev ? { ...prev, status: newStatus, currentStatus: newStatus } : null))
+          }}
           onIndicateResolved={fetchTicketDetail}
         />
 

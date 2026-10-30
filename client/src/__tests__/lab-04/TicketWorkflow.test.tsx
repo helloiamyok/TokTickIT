@@ -79,4 +79,31 @@ describe('TicketWorkflow Component (Lab 4 Regression)', () => {
       expect(onStatusUpdatedMock).toHaveBeenCalledWith('RESOLVED');
     });
   });
+
+  it('synchronizes lifecycle status and resolution indicated state when props update', () => {
+    const { rerender } = render(
+      <TicketWorkflow
+        ticketId={101}
+        currentStatus="OPEN"
+        userRole="REQUESTER"
+        requesterResolutionIndicated={false}
+      />
+    );
+
+    expect(screen.getByTestId('status-badge').textContent).toMatch(/Open/i);
+    expect(screen.queryByTestId('advisory-indicated-badge')).toBeNull();
+
+    // Re-render with new props after parent re-fetches
+    rerender(
+      <TicketWorkflow
+        ticketId={101}
+        currentStatus="RESOLVED"
+        userRole="REQUESTER"
+        requesterResolutionIndicated={true}
+      />
+    );
+
+    expect(screen.getByTestId('status-badge').textContent).toMatch(/Resolved/i);
+    expect(screen.getByTestId('advisory-indicated-badge')).toBeDefined();
+  });
 });

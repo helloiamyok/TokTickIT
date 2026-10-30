@@ -65,7 +65,7 @@ jobs:
           DATABASE_URL: "postgresql://postgres:123456789@localhost:5432/toktickit?schema=public"
           JWT_SECRET: "lab3-jwt-secret-key-334"
           NODE_ENV: "test"
-        run: npx vitest run --fileParallelism=false tests/lab-04/actions-taken.api.test.ts tests/lab-04/ticket-workflow.api.test.ts tests/lab-04/staff-dashboard.api.test.ts tests/lab-04/requester-dashboard.api.test.ts
+        run: npx vitest run --fileParallelism=false tests/lab-04/actions-taken.api.test.ts tests/lab-04/ticket-workflow.api.test.ts tests/lab-04/staff-dashboard.api.test.ts tests/lab-04/requester-dashboard.api.test.ts tests/lab-04/dashboard-smoke.test.ts
 
   test-client:
     name: Frontend Component Tests

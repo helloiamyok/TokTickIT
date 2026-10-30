@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { ActionsTakenSection } from './ActionsTakenSection'
+import { TicketWorkflow } from './TicketWorkflow'
 
 interface Attachment {
   id: number
@@ -452,6 +453,15 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
             </div>
           </div>
         </div>
+
+        {/* Ticket Lifecycle Workflow Control (Lab 4) */}
+        <TicketWorkflow
+          ticketId={ticket.id}
+          currentStatus={currentStatus}
+          userRole="REQUESTER"
+          requesterResolutionIndicated={ticket.requesterResolutionIndicated}
+          onIndicateResolved={fetchTicketDetail}
+        />
 
         {/* Attachment Management Card */}
         <div className="card-surface" style={{ marginBottom: '1.5rem' }}>

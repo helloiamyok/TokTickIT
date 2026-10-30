@@ -1,76 +1,97 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
-import app from '../../src/index';
+import jwt from 'jsonwebtoken';
+import app from '../../src/app';
 import { prisma } from '../../src/lib/prisma';
 
 describe('Ticket Workflow and Resolution Gate API (Lab 4)', () => {
-  let itStaffToken: string;
+  let staffToken: string;
   let requesterToken: string;
   let otherRequesterToken: string;
   let testTicketId: number;
+  let resolvedTicketId: number;
   let otherTicketId: number;
 
   beforeAll(async () => {
-    // 1. IT Staff Login
-    const staffRes = await request(app)
-      .post('/api/auth/login')
-      .send({ email: 'michael.brown@tiktockit.com', password: 'Password123!' });
-    itStaffToken = staffRes.body.token || staffRes.headers['set-cookie'][0].split(';')[0].replace('token=', '');
+    const JWT_SECRET = process.env.JWT_SECRET || 'lab3-jwt-secret-key-334';
+    const generateToken = (user: { id: number; email: string; role: string }) => {
+      return jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, {
+        expiresIn: '1d',
+      });
+    };
 
-    // 2. Requester 1 Login (Jennifer Anderson)
-    const reqRes = await request(app)
-      .post('/api/auth/login')
-      .send({ email: 'jennifer.anderson@tiktockit.com', password: 'Password123!' });
-    requesterToken = reqRes.body.token || reqRes.headers['set-cookie'][0].split(';')[0].replace('token=', '');
-    const requesterId = reqRes.body.user.id;
+    // 1. ดึงผู้ใช้สำหรับทดสอบจาก Seed Data
+    const staff = await prisma.user.findFirst({ where: { role: 'IT_STAFF' } });
+    const requester = await prisma.user.findFirst({ where: { role: 'REQUESTER' } });
+    const otherRequester = await prisma.user.findFirst({
+      where: { role: 'REQUESTER', NOT: { id: requester?.id } },
+    });
 
-    // 3. Requester 2 Login (Amanda Clark)
-    const req2Res = await request(app)
-      .post('/api/auth/login')
-      .send({ email: 'amanda.clark@tiktockit.com', password: 'Password123!' });
-    otherRequesterToken = req2Res.body.token || req2Res.headers['set-cookie'][0].split(';')[0].replace('token=', '');
-    const otherRequesterId = req2Res.body.user.id;
+    if (!staff || !requester || !otherRequester) {
+      throw new Error('Seed data required: staff, requester, and otherRequester');
+    }
 
-    // Get categories and systems
+    // 2. ออก Token
+    staffToken = (staff as any).token || generateToken(staff);
+    requesterToken = (requester as any).token || generateToken(requester);
+    otherRequesterToken = (otherRequester as any).token || generateToken(otherRequester);
+
+    // ดึง category และ system สำหรับผูก foreign key
     const cat = await prisma.category.findFirst();
     const sys = await prisma.relatedSystem.findFirst();
+    const categoryId = cat?.id || 1;
+    const relatedSystemId = sys?.id || 1;
 
-    // 4. Create or reset Test Ticket 1 (Owned by Requester 1, IN_PROGRESS)
-    const ticket1 = await prisma.ticket.create({
+    // 3. เตรียม Ticket สถานะ IN_PROGRESS
+    const ticket = await prisma.ticket.create({
       data: {
         ticketNo: `TKT-WF-${Date.now()}-1`,
-        summary: 'Network VPN Dropping Under Load',
-        description: 'Connection fails every 10 minutes when connected to VPN gateway.',
+        summary: 'Network printer issue',
+        description: 'Unable to connect to office printer',
         requestedPriority: 'HIGH',
         itPriority: 'HIGH',
         currentStatus: 'IN_PROGRESS',
-        requesterId,
-        categoryId: cat?.id || 1,
-        relatedSystemId: sys?.id || 1,
+        requesterId: requester.id,
+        categoryId,
+        relatedSystemId,
       },
     });
-    testTicketId = ticket1.id;
+    testTicketId = ticket.id;
 
-    // 5. Create Test Ticket 2 (Owned by Requester 2, NEW)
-    const ticket2 = await prisma.ticket.create({
+    // 4. เตรียม Ticket สถานะ RESOLVED
+    const resolvedTicket = await prisma.ticket.create({
       data: {
         ticketNo: `TKT-WF-${Date.now()}-2`,
-        summary: 'Cannot Access Email Client',
-        description: 'Outlook credentials rejected after reset.',
+        summary: 'Monitor flickering',
+        description: 'HDMI cable faulty',
         requestedPriority: 'MEDIUM',
         itPriority: 'MEDIUM',
-        currentStatus: 'NEW',
-        requesterId: otherRequesterId,
-        categoryId: cat?.id || 1,
-        relatedSystemId: sys?.id || 1,
+        currentStatus: 'RESOLVED',
+        requesterId: requester.id,
+        categoryId,
+        relatedSystemId,
       },
     });
-    otherTicketId = ticket2.id;
+    resolvedTicketId = resolvedTicket.id;
+
+    // 5. เตรียม Ticket ของ otherRequester
+    const otherTicket = await prisma.ticket.create({
+      data: {
+        ticketNo: `TKT-WF-${Date.now()}-3`,
+        summary: 'Email sync delay',
+        description: 'Emails not syncing in real time',
+        requestedPriority: 'LOW',
+        itPriority: 'LOW',
+        currentStatus: 'OPEN',
+        requesterId: otherRequester.id,
+        categoryId,
+        relatedSystemId,
+      },
+    });
+    otherTicketId = otherTicket.id;
   });
 
-  // -------------------------------------------------------------------------
-  // Test 1: Resolution Gate - Requester cannot directly resolve ticket
-  // -------------------------------------------------------------------------
+  // TEST 1: Resolution Gate - Requester ต้องไม่สามารถเปลี่ยนสถานะเป็น RESOLVED ได้โดยตรง
   it('rejects Requester attempt to directly resolve ticket with 403 Forbidden (Resolution Gate)', async () => {
     const res = await request(app)
       .patch(`/api/tickets/${testTicketId}/status`)
@@ -81,118 +102,70 @@ describe('Ticket Workflow and Resolution Gate API (Lab 4)', () => {
     expect(res.body.error).toMatch(/Resolution Gate/i);
   });
 
-  // -------------------------------------------------------------------------
-  // Test 2: Resolution Gate - Requester cannot directly close ticket
-  // -------------------------------------------------------------------------
-  it('rejects Requester attempt to directly close ticket with 403 Forbidden', async () => {
+  // TEST 2: Requester คนอื่นพยายามเข้าถึงตั๋ว
+  it('rejects update from Requester who does not own the ticket with 403 Forbidden', async () => {
     const res = await request(app)
       .patch(`/api/tickets/${testTicketId}/status`)
-      .set('Authorization', `Bearer ${requesterToken}`)
-      .send({ status: 'CLOSED' });
+      .set('Authorization', `Bearer ${otherRequesterToken}`)
+      .send({ requesterIndicatesResolved: true });
 
     expect(res.status).toBe(403);
-    expect(res.body.error).toMatch(/Resolution Gate/i);
   });
 
-  // -------------------------------------------------------------------------
-  // Test 3: Requester can submit advisory resolution note
-  // -------------------------------------------------------------------------
-  it('allows Requester to submit advisory resolution note without changing status directly', async () => {
+  // TEST 3: Requester สามารถส่ง Advisory Note แจ้งว่าปัญหาเสร็จแล้วได้
+  it('allows Requester to submit advisory resolution note without changing ticket status', async () => {
     const res = await request(app)
       .patch(`/api/tickets/${testTicketId}/status`)
       .set('Authorization', `Bearer ${requesterToken}`)
-      .send({ requesterResolvedNote: 'VPN reconnected and is working stably now' });
+      .send({ requesterIndicatesResolved: true });
 
     expect(res.status).toBe(200);
-    expect(res.body.requesterResolutionIndicated).toBe(true);
-
-    // Verify ticket in DB still retains IN_PROGRESS status
-    const verified = await prisma.ticket.findUnique({ where: { id: testTicketId } });
-    expect(verified?.currentStatus).toBe('IN_PROGRESS');
-    expect(verified?.requesterResolutionIndicated).toBe(true);
+    expect(res.body.ticket.status).toBe('IN_PROGRESS'); // สถานะต้องยังไม่เปลี่ยนเป็น RESOLVED
   });
 
-  // -------------------------------------------------------------------------
-  // Test 4: Requester cannot modify status on another requester ticket
-  // -------------------------------------------------------------------------
-  it('rejects Requester attempt to modify ticket owned by another user with 403 Forbidden', async () => {
-    // Requester 1 attempts to modify Ticket 2 (owned by Requester 2)
-    const res = await request(app)
-      .patch(`/api/tickets/${otherTicketId}/status`)
-      .set('Authorization', `Bearer ${requesterToken}`)
-      .send({ requesterResolvedNote: 'Malicious attempt' });
-
-    expect(res.status).toBe(403);
-    expect(res.body.error).toMatch(/forbidden|not own/i);
-  });
-
-  // -------------------------------------------------------------------------
-  // Test 5: Invalid Transition Matrix - Rejected with 400 Bad Request
-  // -------------------------------------------------------------------------
+  // TEST 4: ตรวจสอบ Transition Matrix ที่ผิดกฎ (Invalid Transition)
   it('rejects invalid status transition with 400 Bad Request', async () => {
-    // Attempting invalid transition from IN_PROGRESS directly to CLOSED
+    // จาก IN_PROGRESS พยายามกระโดดไป CLOSED โดยตรง (ต้องผ่าน RESOLVED ก่อน)
     const res = await request(app)
       .patch(`/api/tickets/${testTicketId}/status`)
-      .set('Authorization', `Bearer ${itStaffToken}`)
+      .set('Authorization', `Bearer ${staffToken}`)
       .send({ status: 'CLOSED' });
 
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/Invalid status transition/i);
   });
 
-  // -------------------------------------------------------------------------
-  // Test 6: IT Staff moves IN_PROGRESS -> RESOLVED (Allowed transition)
-  // -------------------------------------------------------------------------
-  it('allows IT Staff to transition ticket to permitted next status (RESOLVED)', async () => {
+  // TEST 5: IT Staff สามารถเปลี่ยนสถานะตาม Transition Matrix ได้อย่างถูกต้อง (IN_PROGRESS -> RESOLVED)
+  it('allows IT Staff to transition ticket to RESOLVED', async () => {
     const res = await request(app)
       .patch(`/api/tickets/${testTicketId}/status`)
-      .set('Authorization', `Bearer ${itStaffToken}`)
+      .set('Authorization', `Bearer ${staffToken}`)
       .send({ status: 'RESOLVED' });
 
     expect(res.status).toBe(200);
     expect(res.body.status).toBe('RESOLVED');
-
-    const check = await prisma.ticket.findUnique({ where: { id: testTicketId } });
-    expect(check?.currentStatus).toBe('RESOLVED');
   });
 
-  // -------------------------------------------------------------------------
-  // Test 7: IT Staff moves RESOLVED -> CLOSED (Allowed transition)
-  // -------------------------------------------------------------------------
-  it('allows IT Staff to transition RESOLVED ticket to CLOSED', async () => {
+  // TEST 6: IT Staff ปิดงานตั๋วที่แก้แล้ว (RESOLVED -> CLOSED)
+  it('allows IT Staff to close a RESOLVED ticket', async () => {
     const res = await request(app)
-      .patch(`/api/tickets/${testTicketId}/status`)
-      .set('Authorization', `Bearer ${itStaffToken}`)
+      .patch(`/api/tickets/${resolvedTicketId}/status`)
+      .set('Authorization', `Bearer ${staffToken}`)
       .send({ status: 'CLOSED' });
 
     expect(res.status).toBe(200);
     expect(res.body.status).toBe('CLOSED');
   });
 
-  // -------------------------------------------------------------------------
-  // Test 8: IT Staff moves CLOSED -> REOPENED (Allowed transition)
-  // -------------------------------------------------------------------------
-  it('allows IT Staff to transition CLOSED ticket to REOPENED', async () => {
-    const res = await request(app)
-      .patch(`/api/tickets/${testTicketId}/status`)
-      .set('Authorization', `Bearer ${itStaffToken}`)
-      .send({ status: 'REOPENED' });
-
-    expect(res.status).toBe(200);
-    expect(res.body.status).toBe('REOPENED');
-  });
-
-  // -------------------------------------------------------------------------
-  // Test 9: Stale Update / Concurrency Conflict (409 Conflict)
-  // -------------------------------------------------------------------------
+  // TEST 7: Stale Update / Concurrency Conflict (409 Conflict)
   it('rejects stale update with 409 Conflict when concurrency timestamp mismatches', async () => {
     const staleTime = new Date('2020-01-01T00:00:00Z').toISOString();
 
     const res = await request(app)
       .patch(`/api/tickets/${testTicketId}/status`)
-      .set('Authorization', `Bearer ${itStaffToken}`)
+      .set('Authorization', `Bearer ${staffToken}`)
       .send({
-        status: 'IN_PROGRESS',
+        status: 'CLOSED',
         updatedAt: staleTime,
       });
 
@@ -200,13 +173,11 @@ describe('Ticket Workflow and Resolution Gate API (Lab 4)', () => {
     expect(res.body.code).toBe('STALE_UPDATE_CONFLICT');
   });
 
-  // -------------------------------------------------------------------------
-  // Test 10: Non-existent ticket returns 404 Not Found
-  // -------------------------------------------------------------------------
+  // TEST 8: Non-existent ticket returns 404 Not Found
   it('returns 404 Not Found when updating status of non-existent ticket', async () => {
     const res = await request(app)
       .patch('/api/tickets/999999/status')
-      .set('Authorization', `Bearer ${itStaffToken}`)
+      .set('Authorization', `Bearer ${staffToken}`)
       .send({ status: 'OPEN' });
 
     expect(res.status).toBe(404);

@@ -34,7 +34,7 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
   initialMetrics,
   initialRecentTickets,
 }) => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   const [metrics, setMetrics] = useState<StaffMetrics>(
@@ -207,11 +207,101 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
       style={{
         backgroundColor: '#F5F7F6',
         minHeight: '100vh',
-        padding: '2rem',
+        display: 'flex',
+        flexDirection: 'column',
         fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
       }}
     >
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+      {/* Top Navbar */}
+      <header className="app-header">
+        <div className="header-left">
+          <div className="header-brand">
+            <span style={{ fontSize: '1.35rem', fontWeight: 800, color: '#FFFFFF', letterSpacing: '-0.02em' }}>
+              ⏱️ TokTickIT
+            </span>
+            <span
+              style={{
+                fontSize: '0.72rem',
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                color: '#FFFFFF',
+                fontWeight: 600,
+                padding: '0.15rem 0.5rem',
+                borderRadius: '0.25rem',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+              }}
+            >
+              IT Staff Portal
+            </span>
+          </div>
+
+          <nav className="header-nav">
+            <button
+              onClick={() => navigate('/it/dashboard')}
+              className="nav-btn active"
+            >
+              📊 Dashboard
+            </button>
+            <button
+              onClick={() => navigate('/it/queue')}
+              className="nav-btn"
+            >
+              📥 Ticket Queue
+            </button>
+            {user?.role === 'ADMINISTRATOR' && (
+              <button
+                onClick={() => navigate('/admin/users')}
+                className="nav-btn"
+              >
+                👥 User Management
+              </button>
+            )}
+          </nav>
+        </div>
+
+        {/* User Info & Logout */}
+        {user && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', color: '#FFFFFF' }}>
+              <span style={{ fontSize: '0.88rem', fontWeight: 600 }}>{user.name}</span>
+              <span style={{ fontSize: '0.72rem', opacity: 0.85 }}>
+                {user.email} • <span style={{ textTransform: 'capitalize', fontWeight: 700, backgroundColor: 'rgba(255,255,255,0.2)', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>{user.role}</span>
+              </span>
+            </div>
+            <button
+              onClick={() => navigate('/change-password')}
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                color: '#FFFFFF',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                padding: '0.35rem 0.65rem',
+                borderRadius: '0.375rem',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              🔑 Change Password
+            </button>
+            <button
+              onClick={() => logout()}
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                color: '#FFFFFF',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                padding: '0.35rem 0.75rem',
+                borderRadius: '0.375rem',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              🚪 Logout
+            </button>
+          </div>
+        )}
+      </header>
+
+      <div style={{ maxWidth: '1200px', width: '100%', margin: '0 auto', padding: '2rem' }}>
         
         {/* Header Title Banner */}
         <div style={{ marginBottom: '1.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>

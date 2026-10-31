@@ -141,6 +141,12 @@ export const StaffTicketQueue: React.FC = () => {
 
           <nav className="header-nav">
             <button
+              onClick={() => navigate('/it/dashboard')}
+              className="nav-btn"
+            >
+              📊 Dashboard
+            </button>
+            <button
               onClick={() => navigate('/it/queue')}
               className="nav-btn active"
             >

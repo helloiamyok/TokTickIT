@@ -6,6 +6,9 @@ import { PrismaClient, Priority, TicketStatus } from '@prisma/client'
 import authRoutes from './routes/auth.routes'
 import staffRoutes from './routes/staff.routes'
 import adminRoutes from './routes/admin.routes'
+import ticketRoutes from './routes/ticket.routes'
+import actionTakenRoutes from './routes/action-taken.routes'
+import dashboardRoutes from './routes/dashboard.routes'
 import { authenticate, AuthRequest } from './middlewares/auth.middleware'
 
 const app = express()
@@ -22,10 +25,18 @@ app.use(
 app.use(express.json())
 app.use(cookieParser())
 
-// เชื่อมต่อ Auth Routes, Staff Routes และ Admin Routes สำหรับ Sprint 3
+// เชื่อมต่อ Routes สำหรับ Sprint 3 & Sprint 4
 app.use('/api/auth', authRoutes)
 app.use('/api/staff', staffRoutes)
 app.use('/api/admin', adminRoutes)
+app.use('/api/dashboard', dashboardRoutes)
+app.use('/api/dashboards', dashboardRoutes)
+app.use('/dashboard', dashboardRoutes)
+app.use('/dashboards', dashboardRoutes)
+app.use('/api/tickets', ticketRoutes)
+app.use('/tickets', ticketRoutes)
+app.use('/api/tickets', actionTakenRoutes)
+app.use('/tickets', actionTakenRoutes)
 app.use('/', staffRoutes)
 
 // ฟังก์ชันสร้าง Ticket Number แบบเป็นทางการ (BR-01) เช่น TKT-2026-000001
@@ -242,8 +253,22 @@ app.get('/api/tickets', authenticate, async (req: AuthRequest, res: Response) =>
       }
     }
 
-    if (status && status !== 'ALL' && Object.values(TicketStatus).includes(status as TicketStatus)) {
-      where.currentStatus = status as TicketStatus
+    if (status && status !== 'ALL') {
+      const statusStr = String(status).trim()
+      if (statusStr === 'OPEN') {
+        // For Requesters, Open tickets encompass both NEW and OPEN
+        where.currentStatus = isRequester ? { in: [TicketStatus.NEW, TicketStatus.OPEN] } : TicketStatus.OPEN
+      } else if (statusStr.includes(',')) {
+        const statuses = statusStr
+          .split(',')
+          .map((s) => s.trim() as TicketStatus)
+          .filter((s) => Object.values(TicketStatus).includes(s))
+        if (statuses.length > 0) {
+          where.currentStatus = { in: statuses }
+        }
+      } else if (Object.values(TicketStatus).includes(statusStr as TicketStatus)) {
+        where.currentStatus = statusStr as TicketStatus
+      }
     }
 
     const sortField = typeof sortBy === 'string' ? sortBy : 'createdAt'
@@ -307,6 +332,14 @@ app.get('/api/tickets/:id', authenticate, async (req: AuthRequest, res: Response
           select: { id: true, name: true, email: true, role: true },
         },
         attachments: true,
+        actionsTaken: {
+          include: {
+            performedBy: {
+              select: { id: true, name: true, email: true, role: true },
+            },
+          },
+          orderBy: { actionDateTime: 'asc' },
+        },
       },
     })
 

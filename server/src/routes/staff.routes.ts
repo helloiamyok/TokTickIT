@@ -45,7 +45,11 @@ router.get(
       }
 
       if (status && status !== 'ALL') {
-        where.currentStatus = status as TicketStatus;
+        if (status === 'MY_ASSIGNED') {
+          where.assignedToId = req.user!.id;
+        } else if (Object.values(TicketStatus).includes(status as TicketStatus)) {
+          where.currentStatus = status as TicketStatus;
+        }
       }
 
       if (categoryId && !isNaN(categoryId)) {
@@ -112,6 +116,12 @@ router.get(
           requester: { select: { id: true, name: true, email: true, role: true } },
           assignedTo: { select: { id: true, name: true, email: true, role: true } },
           attachments: { where: { isDeleted: false } },
+          actionsTaken: {
+            include: {
+              performedBy: { select: { id: true, name: true, email: true, role: true } },
+            },
+            orderBy: { actionDateTime: 'asc' },
+          },
         },
       });
 
@@ -229,7 +239,7 @@ router.patch(
 
 // 3. Update Status (with Transition Matrix validation - BR-11)
 router.patch(
-  ['/tickets/:id/status', '/api/staff/tickets/:id/status'],
+  '/api/staff/tickets/:id/status',
   authenticate,
   requireRole(['IT_STAFF', 'ADMINISTRATOR']),
   async (req: AuthRequest, res: Response) => {

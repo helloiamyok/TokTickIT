@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { ActionsTakenSection } from '../components/ActionsTakenSection';
+import { TicketWorkflow } from '../components/TicketWorkflow';
 
 interface UserSummary {
   id: number | string;
@@ -33,6 +35,7 @@ interface TicketDetailData {
   requester?: { id: number | string; name: string; email?: string };
   assignedTo?: { id: number | string; name: string; email?: string } | null;
   createdAt?: string;
+  updatedAt?: string;
 }
 
 export const StaffTicketDetail: React.FC = () => {
@@ -410,6 +413,18 @@ export const StaffTicketDetail: React.FC = () => {
                 </div>
               )}
 
+              {/* Ticket Lifecycle & Status Transition Workflow (Lab 4) */}
+              <TicketWorkflow
+                ticketId={ticket.id}
+                currentStatus={currentStatus}
+                userRole={user?.role || 'IT_STAFF'}
+                updatedAt={ticket.updatedAt}
+                requesterResolutionIndicated={ticket.requesterResolutionIndicated}
+                onStatusUpdated={(newSt) => {
+                  setTicket((prev) => (prev ? { ...prev, status: newSt, currentStatus: newSt } : null));
+                }}
+              />
+
               {/* Meta Grid Card */}
               <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #E5E7EB', borderRadius: '10px', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem' }}>
@@ -681,6 +696,13 @@ export const StaffTicketDetail: React.FC = () => {
                   </form>
                 </div>
               </div>
+
+              {/* Actions Taken Section for IT Staff / Admin */}
+              <ActionsTakenSection
+                ticketId={ticket.id}
+                currentUserRole={user?.role || 'IT_STAFF'}
+                onActionCreated={loadTicketData}
+              />
             </>
           )}
         </div>

@@ -1,0 +1,88 @@
+name: TokTickIT CI
+
+on:
+  push:
+    branches:
+      - 'main'
+      - 'lab*-staging'
+      - 'feature/**'
+  pull_request:
+    branches:
+      - 'main'
+      - 'lab*-staging'
+
+jobs:
+  test-server:
+    name: Backend API Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: "123456789"
+          POSTGRES_DB: toktickit
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install server dependencies
+        working-directory: server
+        run: npm install --no-audit
+
+      - name: Configure server environment
+        working-directory: server
+        run: |
+          echo 'DATABASE_URL="postgresql://postgres:123456789@localhost:5432/toktickit?schema=public"' > .env
+          echo 'JWT_SECRET="lab3-jwt-secret-key-334"' >> .env
+          echo 'PORT=3000' >> .env
+
+      - name: Apply Prisma migrations & seed database
+        working-directory: server
+        env:
+          DATABASE_URL: "postgresql://postgres:123456789@localhost:5432/toktickit?schema=public"
+        run: |
+          npx prisma migrate deploy
+          npx prisma generate
+          npx prisma db seed
+
+      - name: Run server automated tests
+        working-directory: server
+        env:
+          DATABASE_URL: "postgresql://postgres:123456789@localhost:5432/toktickit?schema=public"
+          JWT_SECRET: "lab3-jwt-secret-key-334"
+          NODE_ENV: "test"
+        run: npx vitest run --fileParallelism=false tests/lab-04/actions-taken.api.test.ts tests/lab-04/ticket-workflow.api.test.ts tests/lab-04/staff-dashboard.api.test.ts tests/lab-04/requester-dashboard.api.test.ts tests/lab-04/dashboard-smoke.test.ts
+
+  test-client:
+    name: Frontend Component Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install client dependencies
+        working-directory: client
+        run: npm install --no-audit
+
+      - name: Run client component tests
+        working-directory: client
+        run: npx vitest run src/__tests__/lab-04/ActionsTaken.test.tsx src/components/__tests__/ActionsTaken.test.tsx src/components/__tests__/TicketDetail.test.tsx src/components/__tests__/TicketWorkflow.test.tsx src/__tests__/lab-04/TicketWorkflow.test.tsx src/__tests__/lab-04/StaffDashboard.test.tsx src/__tests__/lab-04/RequesterDashboard.test.tsx src/components/__tests__/StaffDashboard.test.tsx src/components/__tests__/RequesterDashboard.test.tsx

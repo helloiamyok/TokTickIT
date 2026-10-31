@@ -1,0 +1,27 @@
+=== BACKEND API TESTS (Issue 5: Role-based Dashboards) ===
+$ cd server
+$ npx vitest run tests/lab-04/staff-dashboard.api.test.ts tests/lab-04/requester-dashboard.api.test.ts
+
+ RUN  v4.1.10 C:/Users/User/Desktop/CPE334/TokTickIT/server
+
+ ✓ tests/lab-04/staff-dashboard.api.test.ts (3 tests) 300ms
+ ✓ tests/lab-04/requester-dashboard.api.test.ts (3 tests) 334ms
+
+ Test Files  2 passed (2)
+      Tests  6 passed (6)
+   Start at  15:36:38
+   Duration  1.19s (transform 367ms, setup 0ms, import 1.23s, tests 634ms, environment 0ms)
+
+=== FRONTEND COMPONENT TESTS (Issue 5: Role-based Dashboards) ===
+$ cd client
+$ npx vitest run src/__tests__/lab-04/StaffDashboard.test.tsx src/__tests__/lab-04/RequesterDashboard.test.tsx
+
+ RUN  v4.1.10 C:/Users/User/Desktop/CPE334/TokTickIT/client
+
+ ✓ src/__tests__/lab-04/StaffDashboard.test.tsx (4 tests) 365ms
+ ✓ src/__tests__/lab-04/RequesterDashboard.test.tsx (5 tests) 386ms
+
+ Test Files  2 passed (2)
+      Tests  9 passed (9)
+   Start at  15:36:49
+   Duration  2.30s (transform 240ms, setup 456ms, import 456ms, tests 750ms, environment 2.38s)

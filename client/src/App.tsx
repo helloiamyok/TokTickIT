@@ -6,6 +6,8 @@ import { ChangePassword } from './pages/ChangePassword'
 import { StaffTicketQueue } from './pages/StaffTicketQueue'
 import { StaffTicketDetail } from './pages/StaffTicketDetail'
 import { UserManagement } from './pages/UserManagement'
+import { StaffDashboard } from './pages/StaffDashboard'
+import { RequesterDashboard } from './pages/RequesterDashboard'
 import { CreateTicket } from './components/CreateTicket'
 import { MyTickets } from './components/MyTickets'
 import { TicketDetail } from './components/TicketDetail'
@@ -18,7 +20,8 @@ interface Category {
 
 function RequesterPortal() {
   const { user, logout } = useAuth()
-  const [activeTab, setActiveTab] = useState<'list' | 'create' | 'system' | 'detail'>('list')
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'list' | 'create' | 'system' | 'detail'>('list')
+  const [ticketStatusFilter, setTicketStatusFilter] = useState<string>('ALL')
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null)
   const [status, setStatus] = useState<string>('Unknown')
   const [categories, setCategories] = useState<Category[]>([])
@@ -86,6 +89,12 @@ function RequesterPortal() {
           {/* Tab Navigation */}
           <nav className="header-nav">
             <button
+              onClick={() => setActiveTab('dashboard')}
+              className={`nav-btn ${activeTab === 'dashboard' ? 'active' : ''}`}
+            >
+              📊 Dashboard
+            </button>
+            <button
               onClick={() => setActiveTab('list')}
               className={`nav-btn ${activeTab === 'list' || activeTab === 'detail' ? 'active' : ''}`}
             >
@@ -104,13 +113,22 @@ function RequesterPortal() {
               🔍 System Status
             </button>
             {(user?.role === 'IT_STAFF' || user?.role === 'ADMINISTRATOR') && (
-              <button
-                onClick={() => navigate('/it/queue')}
-                className="nav-btn"
-                style={{ backgroundColor: 'rgba(255, 255, 255, 0.25)', fontWeight: 700 }}
-              >
-                📥 IT Queue
-              </button>
+              <>
+                <button
+                  onClick={() => navigate('/it/dashboard')}
+                  className="nav-btn"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.25)', fontWeight: 700 }}
+                >
+                  📊 IT Dashboard
+                </button>
+                <button
+                  onClick={() => navigate('/it/queue')}
+                  className="nav-btn"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.25)', fontWeight: 700 }}
+                >
+                  📥 IT Queue
+                </button>
+              </>
             )}
             {user?.role === 'ADMINISTRATOR' && (
               <button
@@ -168,9 +186,19 @@ function RequesterPortal() {
       </header>
 
       {/* Main View Area */}
-      {activeTab === 'list' ? (
+      {activeTab === 'dashboard' ? (
+        <RequesterDashboard
+          onNavigateTickets={(filterStatus) => {
+            setTicketStatusFilter(filterStatus || 'ALL')
+            setActiveTab('list')
+          }}
+          onCreateTicket={() => setActiveTab('create')}
+          onSelectTicket={handleSelectTicket}
+        />
+      ) : activeTab === 'list' ? (
         <MyTickets
           currentRequester={user}
+          initialStatusFilter={ticketStatusFilter}
           onSelectTicket={handleSelectTicket}
           onCreateNew={() => setActiveTab('create')}
         />
@@ -398,6 +426,38 @@ function AppRoutes() {
       <Route
         path="/change-password"
         element={<ChangePassword />}
+      />
+
+      {/* IT Staff & Admin Dashboard Route */}
+      <Route
+        path="/it/dashboard"
+        element={
+          !user ? (
+            <Navigate to="/login" replace />
+          ) : user.mustChangePassword ? (
+            <Navigate to="/change-password" replace />
+          ) : user.role === 'IT_STAFF' || user.role === 'ADMINISTRATOR' ? (
+            <StaffDashboard />
+          ) : (
+            <Navigate to="/tickets" replace />
+          )
+        }
+      />
+
+      {/* Role-based Dashboard Route */}
+      <Route
+        path="/dashboard"
+        element={
+          !user ? (
+            <Navigate to="/login" replace />
+          ) : user.mustChangePassword ? (
+            <Navigate to="/change-password" replace />
+          ) : user.role === 'IT_STAFF' || user.role === 'ADMINISTRATOR' ? (
+            <StaffDashboard />
+          ) : (
+            <RequesterPortal />
+          )
+        }
       />
 
       {/* IT Staff & Admin Queue Route */}

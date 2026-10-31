@@ -65,7 +65,7 @@ jobs:
           DATABASE_URL: "postgresql://postgres:123456789@localhost:5432/toktickit?schema=public"
           JWT_SECRET: "lab3-jwt-secret-key-334"
           NODE_ENV: "test"
-        run: npx vitest run --fileParallelism=false tests/lab-04/actions-taken.api.test.ts tests/lab-04/ticket-workflow.api.test.ts
+        run: npx vitest run --fileParallelism=false tests/lab-04/actions-taken.api.test.ts tests/lab-04/ticket-workflow.api.test.ts tests/lab-04/staff-dashboard.api.test.ts tests/lab-04/requester-dashboard.api.test.ts tests/lab-04/dashboard-smoke.test.ts
 
   test-client:
     name: Frontend Component Tests
@@ -85,4 +85,4 @@ jobs:
 
       - name: Run client component tests
         working-directory: client
-        run: npx vitest run src/components/__tests__/ActionsTaken.test.tsx src/__tests__/lab-04/ActionsTaken.test.tsx src/components/__tests__/TicketDetail.test.tsx src/components/__tests__/TicketWorkflow.test.tsx src/__tests__/lab-04/TicketWorkflow.test.tsx
+        run: npx vitest run src/__tests__/lab-04/ActionsTaken.test.tsx src/components/__tests__/ActionsTaken.test.tsx src/components/__tests__/TicketDetail.test.tsx src/components/__tests__/TicketWorkflow.test.tsx src/__tests__/lab-04/TicketWorkflow.test.tsx src/__tests__/lab-04/StaffDashboard.test.tsx src/__tests__/lab-04/RequesterDashboard.test.tsx src/components/__tests__/StaffDashboard.test.tsx src/components/__tests__/RequesterDashboard.test.tsx

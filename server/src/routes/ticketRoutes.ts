@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { updateTicketWorkflowStatus } from '../controllers/ticketWorkflowController';
-import { authenticate } from '../middlewares/auth';
+import { authenticate } from '../middlewares/auth.middleware';
 
 const router = Router();
 
@@ -9,11 +9,13 @@ router.patch('/:id/status', authenticate, updateTicketWorkflowStatus);
 
 // Aliases for compatibility
 router.patch('/:id/indicate-resolved', authenticate, (req, res) => {
+  req.body = req.body || {};
   req.body.indicateResolved = true;
   return updateTicketWorkflowStatus(req, res);
 });
 
 router.patch('/:id/resolution-feedback', authenticate, (req, res) => {
+  req.body = req.body || {};
   req.body.indicateResolved = true;
   return updateTicketWorkflowStatus(req, res);
 });

@@ -45,7 +45,11 @@ router.get(
       }
 
       if (status && status !== 'ALL') {
-        where.currentStatus = status as TicketStatus;
+        if (status === 'MY_ASSIGNED') {
+          where.assignedToId = req.user!.id;
+        } else if (Object.values(TicketStatus).includes(status as TicketStatus)) {
+          where.currentStatus = status as TicketStatus;
+        }
       }
 
       if (categoryId && !isNaN(categoryId)) {

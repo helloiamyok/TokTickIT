@@ -35,6 +35,7 @@ interface TicketDetailData {
   requester?: { id: number | string; name: string; email?: string };
   assignedTo?: { id: number | string; name: string; email?: string } | null;
   createdAt?: string;
+  updatedAt?: string;
 }
 
 export const StaffTicketDetail: React.FC = () => {

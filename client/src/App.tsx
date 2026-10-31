@@ -11,7 +11,7 @@ import { RequesterDashboard } from './pages/RequesterDashboard'
 import { CreateTicket } from './components/CreateTicket'
 import { MyTickets } from './components/MyTickets'
 import { TicketDetail } from './components/TicketDetail'
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 
 interface Category {
   id: number
@@ -20,7 +20,10 @@ interface Category {
 
 function RequesterPortal() {
   const { user, logout } = useAuth()
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'list' | 'create' | 'system' | 'detail'>('list')
+  const location = useLocation()
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'list' | 'create' | 'system' | 'detail'>(
+    location.pathname.includes('/dashboard') ? 'dashboard' : 'list'
+  )
   const [ticketStatusFilter, setTicketStatusFilter] = useState<string>('ALL')
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null)
   const [status, setStatus] = useState<string>('Unknown')

@@ -97,7 +97,7 @@ router.post('/users', async (req: AuthRequest, res: Response) => {
 // 3. Update User (with Safety Rules)
 router.patch('/users/:id', async (req: AuthRequest, res: Response) => {
   try {
-    const targetUserId = parseInt(req.params.id, 10);
+    const targetUserId = parseInt(req.params.id as string, 10);
     if (isNaN(targetUserId)) {
       return res.status(400).json({ error: 'Invalid user ID' });
     }
@@ -163,7 +163,7 @@ router.patch('/users/:id', async (req: AuthRequest, res: Response) => {
 // 4. Set New Initial Password
 router.post('/users/:id/reset-password', async (req: AuthRequest, res: Response) => {
   try {
-    const targetUserId = parseInt(req.params.id, 10);
+    const targetUserId = parseInt(req.params.id as string, 10);
     if (isNaN(targetUserId)) {
       return res.status(400).json({ error: 'Invalid user ID' });
     }

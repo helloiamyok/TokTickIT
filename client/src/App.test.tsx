@@ -2,9 +2,21 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import App from './App'
 
+vi.mock('./context/AuthContext', () => ({
+  AuthProvider: ({ children }: { children: React.ReactNode }) => children,
+  useAuth: () => ({
+    user: { id: 1, name: 'Jennifer Anderson', email: 'jennifer@example.com', role: 'REQUESTER', mustChangePassword: false },
+    loading: false,
+    logout: vi.fn(),
+    refreshUser: vi.fn(),
+    setUser: vi.fn(),
+  }),
+}))
+
 describe('TokTickIT UI Unit Tests', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
+    window.history.pushState({}, '', '/tickets')
     try {
       window.localStorage?.clear?.()
     } catch {

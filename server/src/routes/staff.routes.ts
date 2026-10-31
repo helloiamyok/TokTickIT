@@ -103,7 +103,7 @@ router.get(
   requireRole(['IT_STAFF', 'ADMINISTRATOR']),
   async (req: AuthRequest, res: Response) => {
     try {
-      const ticketId = parseInt(req.params.id, 10);
+      const ticketId = parseInt(req.params.id as string, 10);
       if (isNaN(ticketId)) {
         return res.status(400).json({ error: 'Invalid ticket ID' });
       }
@@ -148,7 +148,7 @@ router.patch(
   requireRole(['IT_STAFF', 'ADMINISTRATOR']),
   async (req: AuthRequest, res: Response) => {
     try {
-      const ticketId = parseInt(req.params.id, 10);
+      const ticketId = parseInt(req.params.id as string, 10);
       if (isNaN(ticketId)) {
         return res.status(400).json({ error: 'Invalid ticket ID' });
       }
@@ -197,7 +197,7 @@ router.patch(
   requireRole(['IT_STAFF', 'ADMINISTRATOR']),
   async (req: AuthRequest, res: Response) => {
     try {
-      const ticketId = parseInt(req.params.id, 10);
+      const ticketId = parseInt(req.params.id as string, 10);
       if (isNaN(ticketId)) {
         return res.status(400).json({ error: 'Invalid ticket ID' });
       }
@@ -244,7 +244,7 @@ router.patch(
   requireRole(['IT_STAFF', 'ADMINISTRATOR']),
   async (req: AuthRequest, res: Response) => {
     try {
-      const ticketId = parseInt(req.params.id, 10);
+      const ticketId = parseInt(req.params.id as string, 10);
       if (isNaN(ticketId)) {
         return res.status(400).json({ error: 'Invalid ticket ID' });
       }
@@ -292,7 +292,7 @@ router.patch(
   authenticate,
   async (req: AuthRequest, res: Response) => {
     try {
-      const ticketId = parseInt(req.params.id, 10);
+      const ticketId = parseInt(req.params.id as string, 10);
       if (isNaN(ticketId)) {
         return res.status(400).json({ error: 'Invalid ticket ID' });
       }
@@ -341,7 +341,7 @@ router.get(
   authenticate,
   async (req: AuthRequest, res: Response) => {
     try {
-      const ticketId = parseInt(req.params.id, 10);
+      const ticketId = parseInt(req.params.id as string, 10);
       if (isNaN(ticketId)) {
         return res.status(400).json({ error: 'Invalid ticket ID' });
       }
@@ -372,7 +372,7 @@ router.post(
   authenticate,
   async (req: AuthRequest, res: Response) => {
     try {
-      const ticketId = parseInt(req.params.id, 10);
+      const ticketId = parseInt(req.params.id as string, 10);
       if (isNaN(ticketId)) {
         return res.status(400).json({ error: 'Invalid ticket ID' });
       }
@@ -414,7 +414,7 @@ router.get(
   requireRole(['IT_STAFF', 'ADMINISTRATOR']),
   async (req: AuthRequest, res: Response) => {
     try {
-      const ticketId = parseInt(req.params.id, 10);
+      const ticketId = parseInt(req.params.id as string, 10);
       if (isNaN(ticketId)) {
         return res.status(400).json({ error: 'Invalid ticket ID' });
       }
@@ -442,7 +442,7 @@ router.post(
   requireRole(['IT_STAFF', 'ADMINISTRATOR']),
   async (req: AuthRequest, res: Response) => {
     try {
-      const ticketId = parseInt(req.params.id, 10);
+      const ticketId = parseInt(req.params.id as string, 10);
       if (isNaN(ticketId)) {
         return res.status(400).json({ error: 'Invalid ticket ID' });
       }

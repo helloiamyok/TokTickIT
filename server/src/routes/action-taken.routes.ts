@@ -43,7 +43,7 @@ router.post('/:id/actions', authenticate, async (req: AuthRequest, res: Response
     }
 
     // 3. ตรวจสอบว่า Ticket มีอยู่จริง
-    const ticket = await findTicket(req.params.id);
+    const ticket = await findTicket(req.params.id as string);
     if (!ticket) {
       return res.status(404).json({ error: 'Ticket not found' });
     }
@@ -86,7 +86,7 @@ router.get('/:id/actions', authenticate, async (req: AuthRequest, res: Response)
     const user = req.user!;
 
     // 1. ตรวจสอบว่า Ticket มีอยู่จริง
-    const ticket = await findTicket(req.params.id);
+    const ticket = await findTicket(req.params.id as string);
     if (!ticket) {
       return res.status(404).json({ error: 'Ticket not found' });
     }

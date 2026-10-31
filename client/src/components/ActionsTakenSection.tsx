@@ -521,8 +521,24 @@ export const ActionsTakenSection: React.FC<ActionsTakenSectionProps> = ({
                     <td style={{ padding: '10px 12px', color: '#2D3748', maxWidth: '280px' }}>
                       {action.actionDescription}
                     </td>
-                    <td style={{ padding: '10px 12px', color: '#2D3748', maxWidth: '240px' }}>
-                      {action.result}
+                    <td style={{ padding: '10px 12px', color: '#2D3748', maxWidth: '260px' }}>
+                      {action.result && action.result.toLowerCase().includes('complete') ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <span style={{ display: 'inline-block', backgroundColor: '#DEF7EC', color: '#03543F', border: '1px solid #BCF0DA', padding: '2px 8px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 700, width: 'fit-content' }}>
+                            ✓ Complete
+                          </span>
+                          <span style={{ fontSize: '0.85rem' }}>{action.result}</span>
+                        </div>
+                      ) : action.result && action.result.toLowerCase().includes('cancel') ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <span style={{ display: 'inline-block', backgroundColor: '#FDE8E8', color: '#9B1C1C', border: '1px solid #F8B4B4', padding: '2px 8px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 700, width: 'fit-content' }}>
+                            ✕ Cancel
+                          </span>
+                          <span style={{ fontSize: '0.85rem' }}>{action.result}</span>
+                        </div>
+                      ) : (
+                        action.result
+                      )}
                     </td>
                     <td style={{ padding: '10px 12px' }}>
                       {action.followUpRequired ? (
